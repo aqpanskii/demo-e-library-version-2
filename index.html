@@ -1,0 +1,914 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Электронная библиотека Кітап</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
+<style>
+/* Layout: sticky top bar · library grid of generated "spine" covers · book page with cover + tabs · focused reading column with a floating translation card · admin as a two-tab workbench */
+/* Soft cards direction: warm-grey canvas, white 20px cards, pastel icon discs, outlined pill buttons */
+:root{
+  --paper:#EFEEEC; --surface:#FFFFFF; --sunk:#F6F5F3; --ink:#141A2E; --muted:#6B7080; --line:#E6E3DF;
+  --accent:#2F5FE3; --accent-strong:#1F48C2; --on-accent:#FFFFFF; --accent-soft:#E3EAFE;
+  --gold:#E0A100; --gold-soft:#FFF3C4; --ok:#14935F; --ok-soft:#DDF6EA; --bad:#D63A3A; --bad-soft:#FDE4E4;
+  --btn-dark:#141A2E; --on-dark:#FFFFFF;
+  --y-bg:#FFF4C4; --y-fg:#E0A100; --o-bg:#FFE3D1; --o-fg:#F05F0C; --p-bg:#FFDDE9; --p-fg:#E2185C;
+  --v-bg:#EEE4FF; --v-fg:#7C3AED; --b-bg:#DFE8FF; --b-fg:#2F5FE3; --c-bg:#D7F5FA; --c-fg:#0891B2; --m-bg:#D8F6E7; --m-fg:#0E9F6E;
+  --shadow:0 1px 2px rgba(20,26,46,.04),0 8px 28px rgba(20,26,46,.06);
+  --f-display:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-ui:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-read:'Literata',Georgia,'Times New Roman',serif;
+  --r:20px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#121316; --surface:#1C1D22; --sunk:#24262C; --ink:#EEF0F5; --muted:#9A9EAB; --line:#2E3038;
+  --accent:#7C9DFF; --accent-strong:#A3BAFF; --on-accent:#0E1430; --accent-soft:#232C4A;
+  --gold:#F5C542; --gold-soft:#3A3115; --ok:#4CD39A; --ok-soft:#173527; --bad:#FF7A7A; --bad-soft:#3F1D1D;
+  --btn-dark:#EEF0F5; --on-dark:#141A2E;
+  --y-bg:#3A3215; --y-fg:#F5C542; --o-bg:#3D2516; --o-fg:#FF8F4D; --p-bg:#3D1A28; --p-fg:#FF6B9C;
+  --v-bg:#2D2245; --v-fg:#B794FF; --b-bg:#1F2A4D; --b-fg:#7C9DFF; --c-bg:#14343B; --c-fg:#4FD1E8; --m-bg:#16362A; --m-fg:#4CD39A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#121316; --surface:#1C1D22; --sunk:#24262C; --ink:#EEF0F5; --muted:#9A9EAB; --line:#2E3038;
+  --accent:#7C9DFF; --accent-strong:#A3BAFF; --on-accent:#0E1430; --accent-soft:#232C4A;
+  --gold:#F5C542; --gold-soft:#3A3115; --ok:#4CD39A; --ok-soft:#173527; --bad:#FF7A7A; --bad-soft:#3F1D1D;
+  --btn-dark:#EEF0F5; --on-dark:#141A2E;
+  --y-bg:#3A3215; --y-fg:#F5C542; --o-bg:#3D2516; --o-fg:#FF8F4D; --p-bg:#3D1A28; --p-fg:#FF6B9C;
+  --v-bg:#2D2245; --v-fg:#B794FF; --b-bg:#1F2A4D; --b-fg:#7C9DFF; --c-bg:#14343B; --c-fg:#4FD1E8; --m-bg:#16362A; --m-fg:#4CD39A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.35); color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5}
+::selection{background:var(--gold-soft);color:var(--ink)}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+h1,h2,h3{text-wrap:balance;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px}
+@media (max-width:480px){.wrap{padding-inline:16px}}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:16px}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.01em}
+.brand small{display:block;color:var(--muted);font-size:11.5px;line-height:1.2}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav a{text-decoration:none;color:var(--muted);padding:7px 12px;border-radius:8px;font-weight:500}
+.nav a:hover{color:var(--ink);background:var(--sunk)}
+.nav a.on{color:var(--ink);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.langpick{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+@media (max-width:720px){.nav{margin-left:0;order:3;width:100%}.langpick{margin-left:auto}}
+
+/* segmented */
+.seg{display:inline-flex;background:var(--sunk);border-radius:9px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:5px 11px;border-radius:7px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer;letter-spacing:.03em}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+
+/* buttons, inputs */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 15px;border-radius:9px;font-weight:600;cursor:pointer;text-decoration:none;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{background:var(--accent-strong);border-color:var(--accent-strong)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);background:var(--sunk)}
+.btn.danger{color:var(--bad)}
+.btn.danger.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.field{display:grid;gap:6px}
+.field label{font-weight:600;font-size:13px}
+.field .hint{color:var(--muted);font-size:12.5px}
+.input,select.input,textarea.input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px;min-width:0}
+textarea.input{resize:vertical;min-height:90px;line-height:1.5}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);letter-spacing:.02em}
+.chip.accent{background:var(--accent-soft);color:var(--accent-strong)}
+main{padding-block:28px 64px}
+
+/* library */
+.lib-head{display:grid;grid-template-columns:1fr auto;gap:20px 32px;align-items:end;margin-bottom:28px}
+.lib-head h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;letter-spacing:-.01em}
+.lib-head p{color:var(--muted);max-width:56ch;margin:10px 0 0}
+.search{position:relative;width:min(340px,100%)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search .input{padding-left:38px}
+@media (max-width:720px){.lib-head{grid-template-columns:1fr}.search{width:100%}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:28px 22px}
+.card{display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit}
+.card:hover .cover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 34px rgba(0,0,0,.18)}
+.card h3{font-family:var(--f-read);font-weight:600;font-size:18px;line-height:1.25}
+.card .by{color:var(--muted);font-size:13.5px;margin-top:2px}
+.card .desc{color:var(--muted);font-size:13.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:0}
+.card .chips{display:flex;gap:6px;flex-wrap:wrap}
+.empty{padding:48px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:var(--r)}
+
+/* covers */
+.cover{position:relative;aspect-ratio:2/3;max-width:100%;border-radius:4px 10px 10px 4px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.1),0 10px 22px rgba(0,0,0,.14);transition:transform .25s ease,box-shadow .25s ease;background:#333}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover.gen{display:flex;flex-direction:column;justify-content:space-between;padding:16% 12% 12% 16%;color:#F6F1E4}
+.cover.gen::before{content:"";position:absolute;inset:0 auto 0 0;width:7%;background:rgba(0,0,0,.22);box-shadow:1px 0 0 rgba(255,255,255,.12)}
+.cover.gen::after{content:"";position:absolute;left:16%;right:12%;top:52%;height:14%;opacity:.35;background:
+  radial-gradient(circle at 50% 50%,transparent 38%,currentColor 39%,currentColor 44%,transparent 45%) 0 0/28px 28px repeat-x}
+.cover .ct{position:relative;font-family:var(--f-read);font-weight:600;font-size:clamp(15px,1.7vw,19px);line-height:1.2;text-wrap:balance}
+.cover .ca{position:relative;font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.cover .cy{position:relative;font-family:var(--f-display);font-size:10px;opacity:.6;margin-top:4px}
+
+/* book page */
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-weight:500;margin-bottom:20px}
+.back:hover{color:var(--ink)}
+.book-head{display:grid;grid-template-columns:170px 1fr;gap:28px;align-items:start;margin-bottom:26px}
+.book-head .cover{width:170px}
+.book-head h1{font-family:var(--f-read);font-weight:600;font-size:clamp(26px,3.6vw,36px);line-height:1.15}
+.book-head .by{color:var(--muted);font-size:16px;margin-top:6px}
+.book-head p{max-width:62ch;margin:14px 0 0}
+.book-head .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+@media (max-width:600px){.book-head{grid-template-columns:110px 1fr;gap:16px}.book-head .cover{width:110px}.book-head p{grid-column:1/-1}}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.tabs button{border:0;background:none;padding:11px 14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:8px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.tabs .count{background:var(--sunk);border-radius:999px;padding:1px 8px;font-size:12px}
+
+/* reader */
+.reader{display:grid;gap:16px}
+.reader-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.tip{display:flex;align-items:center;gap:10px;background:var(--gold-soft);border-radius:9px;padding:9px 13px;font-size:13.5px}
+.tip mark{background:var(--gold);color:#1b1608;padding:0 4px;border-radius:3px}
+.fontctl{display:flex;gap:4px}
+.page{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(22px,5vw,56px) clamp(18px,6vw,72px);box-shadow:var(--shadow)}
+.reader-text{max-width:64ch;margin:0 auto;font-family:var(--f-read);line-height:1.75;font-size:var(--rs,18px);hyphens:auto}
+.reader-text p{margin:0 0 1.05em;text-indent:1.4em}
+.reader-text p:first-child{text-indent:0}
+.reader-text p:first-child::first-letter{font-family:var(--f-display);font-weight:700;color:var(--accent);float:left;font-size:3.1em;line-height:.9;padding:.08em .1em 0 0}
+.reader-text.cont p:first-child::first-letter{all:unset}
+.reader-text.cont p:first-child{text-indent:1.4em}
+.reader-text::selection,.reader-text *::selection{background:var(--gold);color:#1b1608}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pager .pos{display:flex;align-items:center;gap:8px;color:var(--muted);font-variant-numeric:tabular-nums;font-size:14px}
+.pager .pos input{width:64px;text-align:center;padding:7px}
+.progress{height:4px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+/* translation popover */
+.pop{position:absolute;z-index:50;width:min(340px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.08),0 24px 48px rgba(0,0,0,.18);padding:14px 16px 12px;animation:pop .16s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pop{animation:none}.cover{transition:none}}
+.pop-src{font-family:var(--f-read);font-style:italic;color:var(--muted);font-size:14px;max-height:4.5em;overflow:auto;padding-right:24px}
+.pop-res{font-family:var(--f-read);font-size:20px;font-weight:600;line-height:1.3;margin:6px 0 2px;min-height:1.3em}
+.pop-res.small{font-size:15px;font-weight:400}
+.pop-gloss{display:grid;gap:3px;font-size:13.5px;margin-top:6px}
+.pop-gloss div{display:flex;gap:8px}
+.pop-gloss b{font-weight:600}
+.pop-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.pop-meta{font-size:11.5px;color:var(--muted)}
+.pop-x{position:absolute;top:8px;right:8px;border:0;background:none;color:var(--muted);cursor:pointer;width:28px;height:28px;border-radius:7px;font-size:18px;line-height:1}
+.pop-x:hover{background:var(--sunk);color:var(--ink)}
+.dots{display:inline-flex;gap:4px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:d 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes d{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+/* tasks & tests */
+.tasks-layout{display:grid;gap:32px;max-width:780px}
+.sec-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sec-title h2{font-family:var(--f-display);font-weight:500;font-size:18px}
+.task-list{display:grid;gap:10px;margin:0;padding:0;list-style:none;counter-reset:t}
+.task-list li{counter-increment:t;display:grid;grid-template-columns:auto 1fr;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.task-list li::before{content:counter(t);font-family:var(--f-display);font-weight:700;font-size:13px;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong)}
+.task-list p{margin:3px 0 0;min-width:0}
+.test{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.test-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.test-head h3{font-size:16.5px;font-weight:600}
+.test-head .meta{color:var(--muted);font-size:13px}
+.q{padding:18px 20px;border-bottom:1px solid var(--line)}
+.q:last-of-type{border-bottom:0}
+.q-text{font-weight:600;margin-bottom:10px;display:flex;gap:10px}
+.q-text span{color:var(--muted);font-variant-numeric:tabular-nums;font-weight:500}
+.opts{display:grid;gap:6px}
+.opt{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;cursor:pointer}
+.opt:hover{border-color:var(--muted)}
+.opt input{accent-color:var(--accent);margin:0}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt .mark{margin-left:auto;font-size:12.5px;font-weight:600}
+.opt.right .mark{color:var(--ok)}.opt.wrong .mark{color:var(--bad)}
+.test-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;background:var(--sunk);flex-wrap:wrap}
+.score{display:flex;align-items:center;gap:14px}
+.ring{--p:0;width:54px;height:54px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--line) 0);display:grid;place-items:center}
+.ring b{width:42px;height:42px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;font-family:var(--f-display);font-size:13px;font-variant-numeric:tabular-nums}
+.score strong{display:block;font-size:16px}
+.score small{color:var(--muted)}
+
+/* admin */
+.admin-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.admin-head h1{font-family:var(--f-display);font-weight:700;font-size:clamp(24px,3.4vw,32px)}
+.admin-head p{color:var(--muted);margin:6px 0 0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px}
+.panel h2{font-size:17px;font-weight:600;margin-bottom:4px}
+.panel .sub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;color:var(--muted)}
+.tcell{display:flex;align-items:center;gap:12px}
+.tcell .cover{width:38px;flex:none;border-radius:2px 5px 5px 2px;padding:0}
+.tcell .cover .ct,.tcell .cover .ca,.tcell .cover .cy{display:none}
+.tcell .cover::after{display:none}
+.tcell b{display:block;font-weight:600}
+.tcell span{color:var(--muted);font-size:13px}
+.actions{display:flex;gap:6px;justify-content:flex-end}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid .full{grid-column:1/-1}
+@media (max-width:640px){.form-grid{grid-template-columns:1fr}}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;background:var(--paper);cursor:pointer}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.drop .ico{width:40px;height:40px;border-radius:9px;background:var(--surface);display:grid;place-items:center;color:var(--accent);flex:none;border:1px solid var(--line)}
+.drop b{display:block;font-weight:600;font-size:14px}
+.drop span{color:var(--muted);font-size:12.5px;word-break:break-word}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:18px}
+.status{font-size:13px;color:var(--muted);margin-right:auto}
+.status.err{color:var(--bad)}
+.stack{display:grid;gap:22px}
+.admin-items{display:grid;gap:8px;margin-bottom:16px}
+.admin-item{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.admin-item .txt{min-width:0}
+.admin-item .txt b{display:block;font-weight:600}
+.admin-item .txt span{color:var(--muted);font-size:13px}
+.admin-item .txt p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.qb{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;background:var(--paper)}
+.qb-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.qb-head b{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.qb-opt{display:flex;gap:8px;align-items:center}
+.qb-opt input[type=radio]{accent-color:var(--ok);width:18px;height:18px;flex:none;margin:0}
+.qb-opt .input{padding:8px 10px}
+.login{max-width:400px;margin:32px auto}
+.demo-cred{background:var(--gold-soft);border-radius:9px;padding:10px 12px;font-size:13.5px;margin-bottom:16px}
+.demo-cred code{font-family:ui-monospace,Menlo,monospace;font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:10px;font-weight:500;z-index:60;box-shadow:var(--shadow);max-width:calc(100vw - 32px)}
+.foot{color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-block:18px;margin-top:20px}
+
+/* ===== soft cards theme ===== */
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.015em}
+.bar{background:color-mix(in srgb,var(--paper) 85%,transparent);border-bottom:0}
+.bar-in{padding-block:14px}
+.brand-mark{border-radius:12px;background:var(--btn-dark);color:var(--on-dark);font-family:var(--f-display);font-weight:700;font-size:16px;width:38px;height:38px}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:19px}
+.nav{background:var(--surface);border-radius:999px;padding:4px;box-shadow:var(--shadow)}
+.nav a{border-radius:999px;padding:7px 16px}
+.nav a.on{background:var(--btn-dark);color:var(--on-dark);box-shadow:none}
+.seg{border-radius:999px;background:var(--surface);box-shadow:var(--shadow)}
+.seg button{border-radius:999px}
+.seg button[aria-pressed="true"]{background:var(--btn-dark);color:var(--on-dark);box-shadow:none}
+.btn{border-radius:999px;padding:9px 18px;border-color:var(--line);box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.btn.primary{background:var(--btn-dark);border-color:var(--btn-dark);color:var(--on-dark)}
+.btn.primary:hover{background:var(--btn-dark);opacity:.88;border-color:var(--btn-dark)}
+.btn.ghost{box-shadow:none}
+.input,select.input,textarea.input{border-radius:12px;background:var(--sunk);border-color:transparent}
+.input:focus{background:var(--surface)}
+.eyebrow{color:var(--muted);letter-spacing:.08em}
+.chip{border-radius:999px;background:var(--sunk);color:var(--muted);font-weight:500}
+.chip.accent{background:var(--y-bg);color:var(--ink)}
+
+/* icon discs */
+.ic{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;flex:none}
+.ic svg{width:22px;height:22px}
+.ic.sm{width:36px;height:36px}.ic.sm svg{width:18px;height:18px}
+.ic-y{background:var(--y-bg);color:var(--y-fg)}.ic-o{background:var(--o-bg);color:var(--o-fg)}.ic-p{background:var(--p-bg);color:var(--p-fg)}
+.ic-v{background:var(--v-bg);color:var(--v-fg)}.ic-b{background:var(--b-bg);color:var(--b-fg)}.ic-c{background:var(--c-bg);color:var(--c-fg)}.ic-m{background:var(--m-bg);color:var(--m-fg)}
+
+/* library */
+.lib-head h1{font-weight:700;font-size:clamp(30px,4.4vw,46px);letter-spacing:-.025em}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:32px}
+.feat{background:var(--surface);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);display:grid;gap:14px;align-content:start}
+.feat h3{font-size:18px;font-weight:700;line-height:1.25}
+.feat p{margin:4px 0 0;color:var(--muted);font-size:14.5px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.card{background:var(--surface);border-radius:var(--r);padding:14px 14px 18px;box-shadow:var(--shadow);gap:14px;transition:transform .2s ease,box-shadow .2s ease}
+.card:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(0,0,0,.05),0 16px 36px rgba(20,26,46,.10)}
+.card:hover .cover{transform:none;box-shadow:none}
+.card>div,.card>p{padding-inline:6px}
+.card h3{font-family:var(--f-display);font-weight:700;font-size:18.5px;line-height:1.25}
+.card .chips{padding-inline:6px}
+
+/* covers: pastel panels */
+.cover{border-radius:14px;box-shadow:none}
+.cover.gen{color:var(--ink);padding:18px;justify-content:space-between}
+.cover.gen::before{display:none}
+.cv-ic{position:relative;width:46px;height:46px;border-radius:50%;background:var(--surface);color:var(--cov-fg);display:grid;place-items:center}
+.cv-ic svg{width:22px;height:22px}
+.cover.gen::after{content:"";position:absolute;right:-30px;bottom:-30px;left:auto;top:auto;width:150px;height:150px;border-radius:50%;background:var(--cov-fg);opacity:.12}
+.cover.gen .ct{font-family:var(--f-display);font-weight:700;font-size:clamp(18px,2vw,22px);letter-spacing:-.01em;margin-top:auto;margin-bottom:10px}
+.cover.gen .ca{opacity:1;color:var(--muted);letter-spacing:.06em;font-weight:600}
+.cover.gen .cy{font-family:var(--f-ui);opacity:1;color:var(--muted)}
+.book-head .cover{box-shadow:var(--shadow)}
+.tcell .cover{border-radius:8px}
+.tcell .cv-ic{display:none}
+
+/* book page */
+.book-head{background:var(--surface);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+.book-head h1{font-weight:700;letter-spacing:-.02em}
+.tabs{border-bottom:0;background:var(--surface);border-radius:999px;padding:5px;display:inline-flex;box-shadow:var(--shadow)}
+.tabs button{border-radius:999px;border-bottom:0;margin:0;padding:8px 18px}
+.tabs button[aria-selected="true"]{background:var(--btn-dark);color:var(--on-dark)}
+.tabs button[aria-selected="true"] .count{background:rgba(255,255,255,.18);color:inherit}
+.tabs .count{background:var(--sunk)}
+#tabBody{margin-top:4px}
+
+/* reader */
+.tip{background:var(--surface);border-radius:999px;padding:6px 16px 6px 6px;box-shadow:var(--shadow);gap:10px}
+.page{border:0;border-radius:24px;box-shadow:var(--shadow)}
+.reader-text p:first-child::first-letter{font-family:var(--f-display);font-weight:700;color:var(--accent)}
+.progress{height:6px;border-radius:999px;background:var(--surface)}
+.progress span{border-radius:999px;background:var(--accent)}
+.pop{border-radius:18px;border:0}
+
+/* tasks & tests */
+.sec-title{justify-content:flex-start;align-items:center;gap:12px}
+.sec-title h2{font-family:var(--f-display);font-weight:700;font-size:20px}
+.task-list li{border:0;border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;align-items:center}
+.task-list li::before{width:40px;height:40px;border-radius:50%;background:var(--y-bg);color:var(--y-fg);font-family:var(--f-display);font-size:15px}
+.test{border:0;border-radius:var(--r);box-shadow:var(--shadow)}
+.test-head{border-bottom:1px solid var(--line);justify-content:flex-start}
+.test-head h3{font-weight:700;font-size:18px}
+.opt{border-radius:14px;background:var(--sunk);border-color:transparent}
+.opt:hover{border-color:var(--line);background:var(--surface)}
+.test-foot{background:var(--sunk)}
+.ring b{background:var(--sunk);font-family:var(--f-display);font-weight:700}
+
+/* admin */
+.admin-head h1{font-weight:700}
+.panel{border:0;border-radius:var(--r);box-shadow:var(--shadow)}
+.panel-title{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.panel-title h2{margin:0;font-weight:700;font-size:18px}
+.panel-title p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+.table-wrap{border:0;border-radius:var(--r);box-shadow:var(--shadow)}
+th{background:var(--surface)}
+.drop{border-radius:14px;background:var(--sunk)}
+.admin-item{border:0;background:var(--sunk);border-radius:14px}
+.qb{border:0;background:var(--sunk);border-radius:16px}
+.qb-opt .input{background:var(--surface)}
+.demo-cred{background:var(--y-bg);border-radius:12px}
+.toast{border-radius:999px;background:var(--btn-dark);color:var(--on-dark)}
+.foot{border-top:0}
+</style>
+
+<header class="bar">
+  <div class="wrap bar-in">
+    <a class="brand" href="#/"><span class="brand-mark">К</span><span><b>Кітап</b><small>электронная библиотека</small></span></a>
+    <nav class="nav" id="nav">
+      <a href="#/" data-nav="lib">Библиотека</a>
+      <a href="#/admin" data-nav="admin">Админ-панель</a>
+    </nav>
+    <div class="langpick"><span>Перевод на</span><div class="seg" id="langSeg" role="group" aria-label="Язык перевода"></div></div>
+  </div>
+</header>
+<main class="wrap" id="app"></main>
+<div class="wrap foot">Демо-версия учебного проекта. Изменения в админ-панели сохраняются в этом браузере.</div>
+
+<script>
+/* ---------- data ---------- */
+const LANGS=[{code:'ru',label:'RU',name:'русский'},{code:'kk',label:'KZ',name:'казахский'},{code:'en',label:'EN',name:'английский'}];
+const LANG_NAME={ru:'Русский',kk:'Қазақша',en:'English'};
+const SEED=()=>({books:[
+{id:'b1',title:'A Scandal in Bohemia',author:'Arthur Conan Doyle',year:1891,lang:'en',format:'EPUB',cover:{type:'gen',hue:206},
+desc:'Первый рассказ сборника «Приключения Шерлока Холмса». Король Богемии просит Холмса вернуть компрометирующую фотографию, и сыщик встречает Ирэн Адлер, которая оказывается умнее его.',
+paras:[
+"To Sherlock Holmes she is always the woman. I have seldom heard him mention her under any other name. In his eyes she eclipses and predominates the whole of her sex. It was not that he felt any emotion akin to love for Irene Adler. All emotions, and that one particularly, were abhorrent to his cold, precise but admirably balanced mind. He was, I take it, the most perfect reasoning and observing machine that the world has seen, but as a lover he would have placed himself in a false position.",
+"He never spoke of the softer passions, save with a gibe and a sneer. They were admirable things for the observer—excellent for drawing the veil from men's motives and actions. But for the trained reasoner to admit such intrusions into his own delicate and finely adjusted temperament was to introduce a distracting factor which might throw a doubt upon all his mental results. Grit in a sensitive instrument, or a crack in one of his own high-power lenses, would not be more disturbing than a strong emotion in a nature such as his. And yet there was but one woman to him, and that woman was the late Irene Adler, of dubious and questionable memory.",
+"I had seen little of Holmes lately. My marriage had drifted us away from each other. My own complete happiness, and the home-centred interests which rise up around the man who first finds himself master of his own establishment, were sufficient to absorb all my attention, while Holmes, who loathed every form of society with his whole Bohemian soul, remained in our lodgings in Baker Street, buried among his old books, and alternating from week to week between cocaine and ambition, the drowsiness of the drug, and the fierce energy of his own keen nature.",
+"He was still, as ever, deeply attracted by the study of crime, and occupied his immense faculties and extraordinary powers of observation in following out those clues, and clearing up those mysteries which had been abandoned as hopeless by the official police.",
+"One night—it was on the twentieth of March, 1888—I was returning from a journey to a patient (for I had now returned to civil practice), when my way led me through Baker Street. As I passed the well-remembered door, which must always be associated in my mind with my wooing, and with the dark incidents of the Study in Scarlet, I was seized with a keen desire to see Holmes again, and to know how he was employing his extraordinary powers.",
+"His rooms were brilliantly lit, and, even as I looked up, I saw his tall, spare figure pass twice in a dark silhouette against the blind. He was pacing the room swiftly, eagerly, with his head sunk upon his chest and his hands clasped behind him.",
+"His manner was not effusive. It seldom was; but he was glad, I think, to see me. With hardly a word spoken, but with a kindly eye, he waved me to an armchair, threw across his case of cigars, and indicated a spirit case and a gasogene in the corner. Then he stood before the fire and looked me over in his singular introspective fashion.",
+"“Wedlock suits you,” he remarked. “I think, Watson, that you have put on seven and a half pounds since I saw you.”",
+"“Seven!” I answered.",
+"“Indeed, I should have thought a little more. Just a trifle more, I fancy, Watson. And in practice again, I observe. You did not tell me that you intended to go into harness.”",
+"“Then, how do you know?”",
+"“I see it, I deduce it. How do I know that you have been getting yourself very wet lately, and that you have a most clumsy and careless servant girl?”"],
+tasks:[{id:'t1',text:'Прочитайте отрывок до конца. Выпишите 10 незнакомых слов, переведите их встроенным переводчиком и составьте с каждым по одному предложению.'},
+{id:'t2',text:'Как Холмс догадался, что Ватсон вернулся к врачебной практике? Ответьте в 4–5 предложениях на английском языке.'}],
+tests:[{id:'x1',title:'Проверка понимания',questions:[
+{q:'Кем Ирэн Адлер была для Шерлока Холмса?',options:['Его невестой','«Той самой женщиной», единственной в своём роде','Его клиенткой','Его сестрой'],correct:1},
+{q:'На какой улице жил Холмс?',options:['Пикадилли','Оксфорд-стрит','Бейкер-стрит','Флит-стрит'],correct:2},
+{q:'Когда Ватсон проходил мимо квартиры Холмса?',options:['1 января 1887 года','20 марта 1888 года','14 февраля 1889 года','20 мая 1890 года'],correct:1},
+{q:'Как переводится слово «seldom»?',options:['Часто','Редко','Никогда','Всегда'],correct:1},
+{q:'На сколько, по мнению Холмса, поправился Ватсон?',options:['На 3 фунта','На 7,5 фунтов','На 10 фунтов','Совсем не поправился'],correct:1}]}]},
+
+{id:'b2',title:'The Happy Prince',author:'Oscar Wilde',year:1888,lang:'en',format:'PDF',cover:{type:'gen',hue:38},
+desc:'Сказка о позолоченной статуе, которая видит горе жителей города, и о Ласточке, которая соглашается ей помочь.',
+paras:[
+"High above the city, on a tall column, stood the statue of the Happy Prince. He was gilded all over with thin leaves of fine gold, for eyes he had two bright sapphires, and a large red ruby glowed on his sword-hilt.",
+"He was very much admired indeed. “He is as beautiful as a weathercock,” remarked one of the Town Councillors who wished to gain a reputation for having artistic tastes; “only not quite so useful,” he added, fearing lest people should think him unpractical, which he really was not.",
+"“Why can't you be like the Happy Prince?” asked a sensible mother of her little boy who was crying for the moon. “The Happy Prince never dreams of crying for anything.”",
+"“I am glad there is some one in the world who is quite happy,” muttered a disappointed man as he gazed at the wonderful statue.",
+"One night there flew over the city a little Swallow. His friends had gone away to Egypt six weeks before, but he had stayed behind, for he was in love with the most beautiful Reed. He had met her early in the spring as he was flying down the river after a big yellow moth, and had been so attracted by her slender waist that he had stopped to talk to her.",
+"“Shall I love you?” said the Swallow, who liked to come to the point at once, and the Reed made him a low bow. So he flew round and round her, touching the water with his wings, and making silver ripples. This was his courtship, and it lasted all through the summer.",
+"All day long he flew, and at night-time he arrived at the city. “Where shall I put up?” he said; “I hope the town has made preparations.” Then he saw the statue on the tall column. “I will put up there,” he cried; “it is a fine position, with plenty of fresh air.” So he alighted just between the feet of the Happy Prince.",
+"“I have a golden bedroom,” he said softly to himself as he looked round, and he prepared to go to sleep; but just as he was putting his head under his wing a large drop of water fell on him. “What a curious thing!” he cried; “there is not a single cloud in the sky, the stars are quite clear and bright, and yet it is raining.”"],
+tasks:[{id:'t3',text:'Опишите статую Счастливого Принца по тексту: из чего сделаны глаза и чем украшен меч?'},
+{id:'t4',text:'Найдите в тексте три слова, связанных с птицами и природой. Переведите их на казахский язык.'}],
+tests:[{id:'x2',title:'Тест по первой части',questions:[
+{q:'Где стояла статуя Счастливого Принца?',options:['У реки','На высокой колонне над городом','В саду дворца','У ратуши'],correct:1},
+{q:'Из чего были сделаны глаза Принца?',options:['Из рубинов','Из золота','Из сапфиров','Из стекла'],correct:2},
+{q:'Почему Ласточка не улетела в Египет вместе с друзьями?',options:['Она была ранена','Она влюбилась в Тростинку','Она заблудилась','Она ждала Принца'],correct:1},
+{q:'Как переводится слово «swallow» в этой сказке?',options:['Ласточка','Воробей','Чайка','Голубь'],correct:0}]}]},
+
+{id:'b3',title:'Капитанская дочка',author:'Александр Пушкин',year:1836,lang:'ru',format:'DOCX',cover:{type:'gen',hue:356},
+desc:'Исторический роман о Пугачёвском восстании. Отрывок из первой главы: детство Петра Гринёва и его дядька Савельич.',
+paras:[
+"Отец мой Андрей Петрович Гринёв в молодости своей служил при графе Минихе и вышел в отставку премьер-майором в 17.. году. С тех пор жил он в своей Симбирской деревне, где и женился на девице Авдотье Васильевне Ю., дочери бедного тамошнего дворянина. Нас было девять человек детей. Все мои братья и сёстры умерли во младенчестве.",
+"Матушка была ещё мною брюхата, как уже я был записан в Семёновский полк сержантом, по милости майора гвардии князя Б., близкого нашего родственника. Если бы паче всякого чаяния матушка родила дочь, то батюшка объявил бы куда следовало о смерти неявившегося сержанта, и дело тем бы и кончилось. Я считался в отпуску до окончания наук.",
+"В то время воспитывались мы не по-нынешнему. С пятилетнего возраста отдан я был на руки стремянному Савельичу, за трезвое поведение пожалованному мне в дядьки. Под его надзором на двенадцатом году выучился я русской грамоте и мог очень здраво судить о свойствах борзого кобеля."],
+tasks:[{id:'t5',text:'Перескажите отрывок на английском или казахском языке. Пользуйтесь переводчиком только для отдельных слов.'},
+{id:'t6',text:'Кто такой Савельич и какую роль он играл в воспитании героя?'}],
+tests:[{id:'x3',title:'Глава I. Сержант гвардии',questions:[
+{q:'Где жил отец Гринёва после отставки?',options:['В Петербурге','В Симбирской деревне','В Москве','В Оренбурге'],correct:1},
+{q:'Сколько детей было в семье?',options:['Трое','Пятеро','Семеро','Девять'],correct:3},
+{q:'В какой полк записали героя ещё до рождения?',options:['Преображенский','Семёновский','Измайловский','Конногвардейский'],correct:1},
+{q:'Чему герой выучился к двенадцати годам?',options:['Русской грамоте','Французскому языку','Фехтованию','Арифметике'],correct:0}]}]}
+]});
+
+/* demo dictionary: offline fallback so the demo works without network */
+const D_EN={woman:['женщина','әйел'],seldom:['редко','сирек'],mention:['упоминать','атап өту'],eclipses:['затмевает','тасалайды'],predominates:['преобладает','басым болады'],emotion:['чувство, эмоция','сезім'],emotions:['чувства, эмоции','сезімдер'],akin:['сродни, похожий','ұқсас'],abhorrent:['отвратительный, чуждый','жиіркенішті'],precise:['точный','нақты'],admirably:['превосходно','керемет'],balanced:['уравновешенный','теңгерімді'],reasoning:['рассуждающий, логический','пайымдаушы'],observing:['наблюдающий','бақылаушы'],gibe:['насмешка','мысқыл'],sneer:['презрительная усмешка','кекесін'],observer:['наблюдатель','бақылаушы'],motives:['мотивы, побуждения','ниеттер, себептер'],reasoner:['мыслитель','ойшыл'],intrusions:['вторжения','араласулар'],delicate:['тонкий, хрупкий','нәзік'],temperament:['темперамент, натура','мінез'],distracting:['отвлекающий','алаңдататын'],grit:['песчинка','құм түйіршігі'],sensitive:['чувствительный','сезімтал'],instrument:['прибор, инструмент','құрал'],crack:['трещина','жарық'],lenses:['линзы','линзалар'],dubious:['сомнительный','күмәнді'],questionable:['сомнительный, спорный','күдікті'],lately:['в последнее время','соңғы кезде'],marriage:['брак, женитьба','неке'],happiness:['счастье','бақыт'],absorb:['поглощать','сіңіру'],attention:['внимание','назар'],loathed:['ненавидел','жек көрді'],society:['общество','қоғам'],lodgings:['съёмная квартира','пәтер'],buried:['погребённый, погружённый','көмілген'],ambition:['честолюбие, амбиция','атаққұмарлық'],drowsiness:['сонливость','қалғу'],fierce:['яростный, неистовый','екпінді'],keen:['острый, сильный','өткір'],crime:['преступление','қылмыс'],immense:['огромный','орасан зор'],faculties:['способности','қабілеттер'],extraordinary:['необычайный','ерекше'],observation:['наблюдение','бақылау'],clues:['улики, зацепки','айғақтар'],mysteries:['тайны, загадки','құпиялар'],abandoned:['заброшенный, оставленный','тастап кеткен'],hopeless:['безнадёжный','үмітсіз'],patient:['пациент','науқас'],practice:['практика','тәжірибе'],seized:['охватил','билеп алды'],desire:['желание','тілек'],brilliantly:['ярко','жарқырап'],silhouette:['силуэт','сұлба'],blind:['штора','перде'],pacing:['расхаживая','ары-бері жүріп'],swiftly:['быстро','жылдам'],eagerly:['нетерпеливо, с жаром','асыға'],clasped:['сцепленные','айқастырылған'],effusive:['бурный, экспансивный','ақтарыла сөйлейтін'],kindly:['добрый, ласковый','мейірімді'],armchair:['кресло','кресло'],singular:['своеобразный','ерекше'],introspective:['самоуглублённый','өз-өзіне үңілген'],wedlock:['брак','неке'],remarked:['заметил','атап өтті'],pounds:['фунты','фунт'],trifle:['пустяк, чуть-чуть','болмашы'],deduce:['делать вывод','қорытынды жасау'],clumsy:['неуклюжий','ебедейсіз'],careless:['небрежный','немқұрайлы'],servant:['слуга, служанка','қызметші'],statue:['статуя','мүсін'],column:['колонна','бағана'],gilded:['позолоченный','алтындалған'],leaves:['листы, листья','жапырақтар'],sapphires:['сапфиры','сапфирлер'],ruby:['рубин','лағыл'],glowed:['сиял','жарқырады'],hilt:['рукоять','сап'],admired:['восхищались','тамсанды'],beautiful:['красивый','әдемі'],weathercock:['флюгер','жел көрсеткіш'],reputation:['репутация','бедел'],useful:['полезный','пайдалы'],sensible:['благоразумный','ақылды'],crying:['плачущий','жылаған'],disappointed:['разочарованный','көңілі қалған'],gazed:['пристально смотрел','қадала қарады'],wonderful:['чудесный','керемет'],swallow:['ласточка','қарлығаш'],reed:['тростник, тростинка','қамыс'],moth:['мотылёк','көбелек'],slender:['стройный','сымбатты'],waist:['талия','бел'],ripples:['рябь','толқындар'],courtship:['ухаживание','ғашықтық'],alighted:['опустился, сел','қонды'],bedroom:['спальня','жатын бөлме'],curious:['странный, любопытный','қызық'],cloud:['облако','бұлт'],raining:['идёт дождь','жаңбыр жауып тұр'],city:['город','қала'],night:['ночь','түн'],mind:['ум, разум','ақыл'],eyes:['глаза','көздер'],world:['мир','әлем'],love:['любовь; любить','махаббат; сүю'],fire:['огонь, камин','от'],rooms:['комнаты','бөлмелер'],room:['комната','бөлме'],door:['дверь','есік'],head:['голова','бас'],hands:['руки','қолдар'],books:['книги','кітаптар'],gold:['золото','алтын'],golden:['золотой','алтын'],sword:['меч','қылыш'],mother:['мать','ана'],boy:['мальчик','бала'],moon:['луна','ай'],river:['река','өзен'],spring:['весна','көктем'],summer:['лето','жаз'],wings:['крылья','қанаттар'],wing:['крыло','қанат'],water:['вода','су'],sky:['небо','аспан'],stars:['звёзды','жұлдыздар'],friends:['друзья','достар'],happy:['счастливый','бақытты'],prince:['принц','ханзада'],journey:['поездка, путешествие','сапар'],soul:['душа','жан'],figure:['фигура','тұлға'],manner:['манера','мәнер'],veil:['завеса, вуаль','перде'],doubt:['сомнение','күмән'],strong:['сильный','күшті'],nature:['натура, природа','табиғат'],memory:['память','жад'],police:['полиция','полиция'],machine:['машина, механизм','машина']};
+const D_RU={'отставку':['retirement','отставка'],'деревне':['village','ауыл'],'дворянина':['nobleman','дворян'],'младенчестве':['infancy','нәрестелік шақ'],'полк':['regiment','полк'],'сержантом':['as a sergeant','сержант болып'],'милости':['favour, grace','рақым'],'родственника':['relative','туыс'],'объявил':['announced','жариялады'],'отпуску':['on leave','демалыста'],'наук':['studies','ғылымдар'],'воспитывались':['were brought up','тәрбиелендік'],'стремянному':['groom, stirrup-man','атқосшы'],'трезвое':['sober','байсалды'],'поведение':['behaviour','мінез-құлық'],'дядьки':['tutor (servant)','тәрбиеші'],'надзором':['supervision','қадағалау'],'грамоте':['literacy','сауат'],'здраво':['sensibly','ақылмен'],'свойствах':['qualities','қасиеттер'],'борзого':['greyhound, borzoi','тазы'],'кобеля':['male dog','төбет'],'матушка':['mother','анашым'],'батюшка':['father','әкем'],'отец':['father','әке'],'дочь':['daughter','қыз'],'дочери':['daughter','қызы'],'братья':['brothers','ағалар'],'сестры':['sisters','апа-сіңлілер'],'умерли':['died','қайтыс болды'],'молодости':['youth','жастық шақ'],'женился':['got married','үйленді'],'бедного':['poor','кедей'],'детей':['children','балалар'],'гвардии':['of the guard','гвардия'],'князя':['prince','князь'],'смерти':['death','өлім'],'возраста':['age','жас'],'русской':['Russian','орыс'],'девице':['maiden','бойжеткен'],'записан':['enrolled','жазылды'],'чаяния':['expectation','үміт']};
+const PHRASES={en:{'the woman':['та самая женщина','сол әйел'],'akin to love':['сродни любви','махаббатқа ұқсас'],'put on seven and a half pounds':['поправился на семь с половиной фунтов','жеті жарым фунт салмақ қосты'],'go into harness':['вернуться к работе','жұмысқа қайта кірісу'],'crying for the moon':['желать невозможного','мүмкін еместі қалау'],'come to the point':['перейти к сути','мәселенің мәніне көшу'],'put up':['остановиться (на ночлег)','түнеп шығу'],'civil practice':['частная врачебная практика','жеке дәрігерлік тәжірибе']},ru:{'вышел в отставку':['retired','отставкаға шықты'],'по милости':['thanks to the favour of','рақымымен'],'по-нынешнему':['as nowadays','қазіргідей']}};
+
+/* ---------- storage ---------- */
+const KEY='kitap-demo-v1', PKEY='kitap-prefs-v1';
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.books))return s}catch(e){}return SEED()}
+let db=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){toast('Хранилище браузера заполнено: изменения сохранятся только до перезагрузки');return false}}
+let prefs={lang:'ru',size:18,pages:{},results:{}};
+try{Object.assign(prefs,JSON.parse(localStorage.getItem(PKEY))||{})}catch(e){}
+function savePrefs(){try{localStorage.setItem(PKEY,JSON.stringify(prefs))}catch(e){}}
+let adminOk=false;try{adminOk=sessionStorage.getItem('kitap-admin')==='1'}catch(e){}
+
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=p=>p+Math.random().toString(36).slice(2,9);
+const book=id=>db.books.find(b=>b.id===id);
+function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:(m>=2&&m<=4&&(h<10||h>=20)?b:c)}
+let toastT;function toast(msg){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
+const ICONS={
+ book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 22H20v-4"/>',
+ globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3.4 3.2 14.6 0 18M12 3c-3.2 3.4-3.2 14.6 0 18"/>',
+ list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',
+ check:'<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/>',
+ upload:'<path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+ shelf:'<rect x="4" y="3" width="5" height="17" rx="1.5"/><rect x="10" y="6" width="5" height="14" rx="1.5"/><path d="m16.5 7.5 3.6-.9 3 12.6-3.6.9z" transform="translate(-2 0)"/>',
+ key:'<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/>'
+};
+const ic=(n,c,sm)=>`<span class="ic ic-${c}${sm?' sm':''}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]}</svg></span>`;
+const PAL=[['b',220],['o',22],['p',340],['v',268],['c',190],['m',155],['y',48]];
+function palOf(h){let best='b',d=999;PAL.forEach(([k,v])=>{const x=Math.min(Math.abs(h-v),360-Math.abs(h-v));if(x<d){d=x;best=k}});return best}
+function coverHTML(b){
+  if(b.cover&&b.cover.type==='img')return `<div class="cover"><img src="${b.cover.src}" alt="Обложка: ${esc(b.title)}"></div>`;
+  const h=(b.cover&&b.cover.hue)??(([...b.title].reduce((a,c)=>a+c.charCodeAt(0),0))%360);
+  const k=palOf(h);
+  return `<div class="cover gen" style="background:var(--${k}-bg);--cov-fg:var(--${k}-fg)" role="img" aria-label="Обложка: ${esc(b.title)}"><span class="cv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.book}</svg></span><div class="ct">${esc(b.title)}</div><div><div class="ca">${esc(b.author)}</div>${b.year?`<div class="cy">${esc(b.year)}</div>`:''}</div></div>`;
+}
+function paginate(paras,limit=1250){
+  const units=[];
+  paras.forEach(p=>{if(p.length<=limit*1.3){units.push(p);return}
+    const sents=p.match(/[^.!?…]+[.!?…]+["”»)]*\s*|.+$/g)||[p];let cur='';
+    sents.forEach(s=>{if((cur+s).length>limit&&cur){units.push(cur.trim());cur=''}cur+=s});if(cur.trim())units.push(cur.trim())});
+  const pages=[];let cur=[],len=0;
+  units.forEach(u=>{if(len+u.length>limit&&cur.length){pages.push(cur);cur=[];len=0}cur.push(u);len+=u.length});
+  if(cur.length)pages.push(cur);return pages.length?pages:[['(пустая книга)']];
+}
+const pageCache={};function pagesOf(b){const k=b.id+':'+b.paras.length+':'+(b.paras[0]||'').length;if(!pageCache[k])pageCache[k]=paginate(b.paras);return pageCache[k]}
+
+/* ---------- language switcher ---------- */
+function renderLangSeg(){$('#langSeg').innerHTML=LANGS.map(l=>`<button type="button" data-lang="${l.code}" aria-pressed="${prefs.lang===l.code}" title="${l.name}">${l.label}</button>`).join('')}
+$('#langSeg').addEventListener('click',e=>{const b=e.target.closest('[data-lang]');if(!b)return;prefs.lang=b.dataset.lang;savePrefs();renderLangSeg();if(popState)runTranslate()});
+
+/* ---------- router ---------- */
+/* in-page router: renders immediately on click instead of waiting for the frame's hashchange */
+let curPath=(location.hash||'').replace(/^#\/?/,'');
+function go(path){
+  path=String(path).replace(/^#?\/?/,'');
+  const same=path===curPath;curPath=path;
+  try{history.replaceState(null,'','#/'+path)}catch(e){}
+  route();if(!same)window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#/"]');if(!a||e.metaKey||e.ctrlKey||e.shiftKey)return;
+  e.preventDefault();go(a.getAttribute('href'));
+});
+function route(){
+  hidePop();
+  const h=curPath.split('/');
+  $$('#nav a').forEach(a=>a.classList.toggle('on',(h[0]==='admin')===(a.dataset.nav==='admin')));
+  if(h[0]==='book'&&book(h[1]))return renderBook(book(h[1]),h[2]==='tasks'?'tasks':'read');
+  if(h[0]==='admin')return renderAdmin(h[1]||'books');
+  renderLibrary();
+}
+window.addEventListener('hashchange',()=>{const p=location.hash.replace(/^#\/?/,'');if(p!==curPath){curPath=p;route();window.scrollTo(0,0)}});
+
+/* ---------- library ---------- */
+let query='';
+function renderLibrary(){
+  document.title='Электронная библиотека Кітап';
+  $('#app').innerHTML=`
+  <section class="lib-head">
+    <div><div class="eyebrow">${db.books.length} ${plural(db.books.length,'книга','книги','книг')} · перевод на 3 языка</div>
+      <h1 style="margin-top:8px">Читайте в оригинале</h1>
+      <p>Откройте книгу и выделите незнакомое слово или фразу. Перевод на русский, казахский или английский появится рядом с текстом. К каждой книге есть задания и тест.</p></div>
+    <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input class="input" id="q" type="search" placeholder="Название или автор" value="${esc(query)}" aria-label="Поиск по названию или автору"></label>
+  </section>
+  <section class="feats">
+    <div class="feat">${ic('globe','c')}<div><h3>Перевод выделенного</h3><p>Выделите слово или фразу в тексте и получите перевод на русский, казахский или английский.</p></div></div>
+    <div class="feat">${ic('list','o')}<div><h3>Задания к книгам</h3><p>Преподаватель прикрепляет к каждой книге инструкции и вопросы для обсуждения.</p></div></div>
+    <div class="feat">${ic('check','m')}<div><h3>Тесты с оценкой</h3><p>Выберите ответы и сразу узнайте результат: сколько вопросов решено верно.</p></div></div>
+  </section>
+  <div class="sec-title">${ic('shelf','v',1)}<h2>Книги</h2></div>
+  <section class="grid" id="grid"></section>`;
+  $('#q').addEventListener('input',e=>{query=e.target.value;drawGrid()});
+  drawGrid();
+}
+function drawGrid(){
+  const q=query.trim().toLowerCase();
+  const list=db.books.filter(b=>!q||(b.title+' '+b.author).toLowerCase().includes(q));
+  $('#grid').innerHTML=list.length?list.map(b=>{const n=b.tasks.length+b.tests.length;return `
+    <a class="card" href="#/book/${b.id}">${coverHTML(b)}
+      <div><h3>${esc(b.title)}</h3><div class="by">${esc(b.author)}</div></div>
+      <p class="desc">${esc(b.desc)}</p>
+      <div class="chips"><span class="chip">${esc(LANG_NAME[b.lang]||b.lang)}</span><span class="chip">${esc(b.format)}</span>${n?`<span class="chip accent">${n} ${plural(n,'задание','задания','заданий')}</span>`:''}</div></a>`}).join('')
+    :`<div class="empty" style="grid-column:1/-1">По запросу «${esc(query)}» ничего не найдено. Проверьте написание или поищите по автору.</div>`;
+}
+
+/* ---------- book page ---------- */
+function renderBook(b,tab){
+  document.title=b.title+' · Кітап';
+  const n=b.tasks.length+b.tests.length;
+  $('#app').innerHTML=`
+  <a class="back" href="#/">← Все книги</a>
+  <section class="book-head">${coverHTML(b)}
+    <div><div class="eyebrow">${esc(b.format)} · ${esc(LANG_NAME[b.lang]||b.lang)}${b.year?' · '+esc(b.year):''}</div>
+      <h1 style="margin-top:6px">${esc(b.title)}</h1><div class="by">${esc(b.author)}</div>
+      <p>${esc(b.desc)}</p></div>
+  </section>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-read" aria-selected="${tab==='read'}">Читать</button>
+    <button role="tab" id="tab-tasks" aria-selected="${tab==='tasks'}">Задания <span class="count">${n}</span></button>
+  </div>
+  <section id="tabBody"></section>`;
+  $('#tab-read').onclick=()=>go('book/'+b.id);
+  $('#tab-tasks').onclick=()=>go('book/'+b.id+'/tasks');
+  tab==='read'?renderReader(b):renderTasks(b);
+}
+
+function renderReader(b){
+  const pages=pagesOf(b);
+  let p=Math.min(prefs.pages[b.id]||0,pages.length-1);
+  $('#tabBody').innerHTML=`
+  <div class="reader">
+    <div class="reader-tools">
+      <div class="tip">${ic('globe','c',1)} Выделите слово или фразу, чтобы увидеть перевод</div>
+      <div class="fontctl"><button class="btn sm" id="fsDec" aria-label="Уменьшить шрифт">A−</button><button class="btn sm" id="fsInc" aria-label="Увеличить шрифт">A+</button></div>
+    </div>
+    <article class="page"><div class="reader-text" id="rt" lang="${esc(b.lang)}"></div></article>
+    <div class="progress"><span id="prog"></span></div>
+    <div class="pager">
+      <button class="btn" id="prev">← Назад</button>
+      <div class="pos"><span>Страница</span><input class="input" id="pnum" type="number" min="1" max="${pages.length}" aria-label="Номер страницы"><span>из ${pages.length}</span></div>
+      <button class="btn primary" id="next">Вперёд →</button>
+    </div>
+  </div>`;
+  const rt=$('#rt');rt.style.setProperty('--rs',prefs.size+'px');
+  function draw(){
+    hidePop();
+    rt.classList.toggle('cont',p>0&&!pageStartsPara(b,pages,p));
+    rt.innerHTML=pages[p].map(t=>`<p>${esc(t)}</p>`).join('');
+    $('#pnum').value=p+1;$('#prev').disabled=p===0;$('#next').disabled=p===pages.length-1;
+    $('#prog').style.width=((p+1)/pages.length*100)+'%';
+    prefs.pages[b.id]=p;savePrefs();
+  }
+  $('#prev').onclick=()=>{if(p>0){p--;draw();$('.tabs').scrollIntoView({block:'start',behavior:'smooth'})}};
+  $('#next').onclick=()=>{if(p<pages.length-1){p++;draw();$('.tabs').scrollIntoView({block:'start',behavior:'smooth'})}};
+  $('#pnum').onchange=e=>{const v=Math.max(1,Math.min(pages.length,parseInt(e.target.value)||1));p=v-1;draw()};
+  $("#fsDec").onclick=()=>{prefs.size=Math.max(14,prefs.size-1);rt.style.setProperty('--rs',prefs.size+'px');savePrefs()};
+  $("#fsInc").onclick=()=>{prefs.size=Math.min(26,prefs.size+1);rt.style.setProperty('--rs',prefs.size+'px');savePrefs()};
+  currentBook=b;draw();
+}
+function pageStartsPara(b,pages,p){const first=pages[p][0];return b.paras.some(x=>x.startsWith(first.slice(0,40)))}
+
+/* ---------- translation popover ---------- */
+let currentBook=null,popState=null,popEl=null,selT;
+const tCache=new Map();
+document.addEventListener('selectionchange',()=>{clearTimeout(selT);selT=setTimeout(onSel,280)});
+function onSel(){
+  const rt=$('#rt');if(!rt)return;
+  const s=window.getSelection();if(!s||s.isCollapsed||!s.rangeCount)return;
+  const r=s.getRangeAt(0);if(!rt.contains(r.commonAncestorContainer))return;
+  const text=s.toString().replace(/\s+/g,' ').trim();
+  if(!text||text.length>220||!/\p{L}/u.test(text))return;
+  if(popState&&popState.text===text)return;
+  const rect=r.getBoundingClientRect();
+  showPop(text,rect);
+}
+function showPop(text,rect){
+  hidePop();
+  popState={text,from:currentBook?currentBook.lang:'en'};
+  popEl=document.createElement('div');popEl.className='pop';popEl.setAttribute('role','dialog');popEl.setAttribute('aria-label','Перевод');
+  popEl.innerHTML=`<button class="pop-x" aria-label="Закрыть">×</button>
+    <div class="pop-src"></div><div class="pop-res" aria-live="polite"></div><div class="pop-gloss"></div>
+    <div class="pop-foot"><span class="pop-meta"></span><div class="seg" role="group" aria-label="Язык перевода">${LANGS.map(l=>`<button type="button" data-l="${l.code}">${l.label}</button>`).join('')}</div></div>`;
+  $('.pop-src',popEl).textContent='«'+text+'»';
+  document.body.appendChild(popEl);
+  const w=popEl.offsetWidth,vw=document.documentElement.clientWidth;
+  let left=rect.left+rect.width/2-w/2+window.scrollX;left=Math.max(16+window.scrollX,Math.min(left,vw-w-16+window.scrollX));
+  let top=rect.bottom+10+window.scrollY;
+  popEl.style.left=left+'px';popEl.style.top=top+'px';
+  const ph=popEl.offsetHeight;
+  if(rect.bottom+ph+20>window.innerHeight&&rect.top-ph-10>0)popEl.style.top=(rect.top-ph-10+window.scrollY)+'px';
+  $('.pop-x',popEl).onclick=hidePop;
+  $('.seg',popEl).addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(!b)return;prefs.lang=b.dataset.l;savePrefs();renderLangSeg();runTranslate()});
+  runTranslate();
+}
+function hidePop(){if(popEl){popEl.remove();popEl=null}popState=null}
+document.addEventListener('pointerdown',e=>{if(popEl&&!popEl.contains(e.target))hidePop()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')hidePop()});
+
+async function runTranslate(){
+  if(!popEl||!popState)return;
+  const {text,from}=popState,to=prefs.lang,st=popState;
+  $$('.seg [data-l]',popEl).forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===to));
+  const res=$('.pop-res',popEl),gl=$('.pop-gloss',popEl),meta=$('.pop-meta',popEl);
+  res.className='pop-res';gl.innerHTML='';
+  if(from===to){res.className='pop-res small';res.textContent='Текст уже на этом языке. Выберите другой язык перевода.';meta.textContent=LANG_NAME[to];return}
+  res.innerHTML='<span class="dots"><i></i><i></i><i></i></span>';meta.textContent='Перевожу…';
+  const out=await translate(text,from,to);
+  if(st!==popState)return;
+  res.className='pop-res'+(out.text&&out.text.length>40?' small':'');
+  if(out.text)res.textContent=out.text;
+  else{res.className='pop-res small';res.textContent=out.gloss.length?'Перевод по словам:':'Этого слова нет в демо-словаре. В рабочей версии перевод придёт из онлайн-API.'}
+  gl.innerHTML=out.gloss.map(g=>`<div><b>${esc(g[0])}</b><span>— ${esc(g[1])}</span></div>`).join('');
+  meta.textContent={api:'Онлайн-перевод',dict:'Словарь библиотеки',none:'Нет перевода'}[out.src]+' · '+LANG_NAME[from].slice(0,3)+' → '+LANG_NAME[to].slice(0,3);
+}
+function norm(s){return s.toLowerCase().replace(/ё/g,'е').replace(/[’]/g,"'").replace(/[^\p{L}\p{N}\s'-]/gu,' ').replace(/\s+/g,' ').trim()}
+function dictWord(w,from,to){
+  const d=from==='en'?D_EN:from==='ru'?D_RU:null;if(!d)return null;
+  const idx=from==='en'?(to==='ru'?0:to==='kk'?1:-1):(to==='en'?0:to==='kk'?1:-1);if(idx<0)return null;
+  const tries=[w];if(from==='en'){tries.push(w.replace(/'s$/,''),w.replace(/s$/,''),w.replace(/es$/,''),w.replace(/ed$/,''),w.replace(/d$/,''),w.replace(/ing$/,''),w.replace(/ly$/,''))}
+  for(const t of tries)if(d[t])return d[t][idx];return null;
+}
+async function translate(text,from,to){
+  const key=from+'|'+to+'|'+text;if(tCache.has(key))return tCache.get(key);
+  const n=norm(text),words=n.split(' ');
+  const ph=PHRASES[from]&&PHRASES[from][n];
+  let out=null;
+  if(ph){const idx=from==='en'?(to==='ru'?0:1):(to==='en'?0:1);out={text:ph[idx],gloss:[],src:'dict'}}
+  else if(words.length===1){const w=dictWord(words[0],from,to);if(w)out={text:w,gloss:[],src:'dict'}}
+  if(!out){
+    const api=await apiTranslate(text,from,to);
+    const gloss=words.length>1?words.map(w=>[w,dictWord(w,from,to)]).filter(g=>g[1]).slice(0,8):[];
+    out=api?{text:api,gloss:[],src:'api'}:{text:'',gloss,src:gloss.length?'dict':'none'};
+  }
+  tCache.set(key,out);return out;
+}
+async function apiTranslate(text,from,to){
+  try{
+    const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),3500);
+    const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair='+from+'|'+to,{signal:ctl.signal});
+    clearTimeout(t);if(!r.ok)return null;const j=await r.json();
+    const s=j&&j.responseData&&j.responseData.translatedText;
+    if(!s||/MYMEMORY WARNING|INVALID/i.test(s))return null;return s;
+  }catch(e){return null}
+}
+
+/* ---------- tasks & tests (reader side) ---------- */
+function renderTasks(b){
+  $('#tabBody').innerHTML=`<div class="tasks-layout">
+    <section><div class="sec-title">${ic('list','o',1)}<h2>Задания</h2><span class="chip">${b.tasks.length}</span></div>
+      ${b.tasks.length?`<ol class="task-list">${b.tasks.map(t=>`<li><p>${esc(t.text)}</p></li>`).join('')}</ol>`:'<div class="empty">Преподаватель пока не добавил заданий к этой книге.</div>'}</section>
+    <section><div class="sec-title">${ic('check','m',1)}<h2>Тесты</h2><span class="chip">${b.tests.length}</span></div>
+      <div class="stack" id="tests">${b.tests.length?'':'<div class="empty">Тестов к этой книге пока нет.</div>'}</div></section>
+  </div>`;
+  b.tests.forEach(t=>$('#tests').appendChild(testEl(t)));
+}
+function testEl(t){
+  const el=document.createElement('form');el.className='test';el.noValidate=true;
+  const prev=prefs.results[t.id];
+  el.innerHTML=`<div class="test-head">${ic('check','m',1)}<div><h3>${esc(t.title)}</h3><div class="meta">${t.questions.length} ${plural(t.questions.length,'вопрос','вопроса','вопросов')}${prev?` · последний результат ${prev.s} из ${prev.n}`:''}</div></div></div>
+  ${t.questions.map((q,i)=>`<fieldset class="q" style="border:0;margin:0"><legend class="q-text" style="padding:0"><span>${i+1}.</span>${esc(q.q)}</legend>
+    <div class="opts">${q.options.map((o,j)=>`<label class="opt"><input type="radio" name="q${i}" value="${j}" id="${t.id}-${i}-${j}"><span>${esc(o)}</span><span class="mark"></span></label>`).join('')}</div></fieldset>`).join('')}
+  <div class="test-foot"><span class="status" data-st>Выберите ответ в каждом вопросе</span><div style="display:flex;gap:8px"><button type="button" class="btn ghost" data-reset>Сбросить</button><button class="btn primary" data-go>Завершить тест</button></div></div>`;
+  el.addEventListener('submit',e=>{
+    e.preventDefault();
+    const ans=t.questions.map((q,i)=>{const c=el.querySelector(`input[name="q${i}"]:checked`);return c?+c.value:null});
+    const miss=ans.filter(a=>a===null).length;
+    if(miss&&!el.dataset.force){$('[data-st]',el).textContent=`Без ответа ${miss} ${plural(miss,'вопрос','вопроса','вопросов')}. Нажмите ещё раз, чтобы всё равно завершить.`;$('[data-st]',el).classList.add('err');el.dataset.force='1';return}
+    let s=0;t.questions.forEach((q,i)=>{
+      $$(`input[name="q${i}"]`,el).forEach((inp,j)=>{inp.disabled=true;const lab=inp.closest('.opt');
+        if(j===q.correct){lab.classList.add('right');lab.querySelector('.mark').textContent='Верно'}
+        else if(ans[i]===j){lab.classList.add('wrong');lab.querySelector('.mark').textContent='Ваш ответ'}});
+      if(ans[i]===q.correct)s++});
+    const n=t.questions.length,pct=Math.round(s/n*100);
+    prefs.results[t.id]={s,n};savePrefs();
+    const verdict=pct>=85?'Отлично':pct>=60?'Хорошо':pct>=40?'Есть над чем поработать':'Перечитайте текст и попробуйте ещё раз';
+    $('.test-foot',el).innerHTML=`<div class="score"><div class="ring" style="--p:${pct}"><b>${pct}%</b></div><div><strong>${s} из ${n} правильных</strong><small>${verdict}</small></div></div><button type="button" class="btn" data-reset>Пройти заново</button>`;
+    $('[data-reset]',el).onclick=()=>el.replaceWith(testEl(t));
+    $('.test-head .meta',el).textContent=`${n} ${plural(n,'вопрос','вопроса','вопросов')} · результат ${s} из ${n}`;
+  });
+  $('[data-reset]',el).onclick=()=>el.replaceWith(testEl(t));
+  return el;
+}
+
+/* ---------- admin ---------- */
+function renderAdmin(sub){
+  document.title='Админ-панель · Кітап';
+  if(!adminOk){
+    $('#app').innerHTML=`<div class="login panel"><div class="panel-title">${ic('key','y')}<div><h2>Вход для администратора</h2><p>Загрузка книг, заданий и тестов.</p></div></div>
+      <div class="demo-cred">Демо-доступ: логин <code>admin</code>, пароль <code>admin</code></div>
+      <form id="login" class="stack" style="gap:14px">
+        <div class="field"><label for="lu">Логин</label><input class="input" id="lu" autocomplete="username" value="admin"></div>
+        <div class="field"><label for="lp">Пароль</label><input class="input" id="lp" type="password" autocomplete="current-password"></div>
+        <span class="status" id="lst"></span>
+        <button class="btn primary">Войти</button></form></div>`;
+    $('#login').onsubmit=e=>{e.preventDefault();if($('#lu').value.trim()==='admin'&&$('#lp').value==='admin'){adminOk=true;try{sessionStorage.setItem('kitap-admin','1')}catch(_){}renderAdmin(sub)}else{$('#lst').textContent='Неверный логин или пароль. Для демо используйте admin / admin.';$('#lst').classList.add('err')}};
+    return;
+  }
+  $('#app').innerHTML=`
+  <div class="admin-head"><div><div class="eyebrow">Администратор</div><h1 style="margin-top:6px">Админ-панель</h1><p>Книги, задания и тесты библиотеки</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" id="resetDemo">Вернуть демо-данные</button><button class="btn" id="logout">Выйти</button></div></div>
+  <div class="tabs" role="tablist"><button role="tab" aria-selected="${sub==='books'}" data-sub="books">Книги <span class="count">${db.books.length}</span></button><button role="tab" aria-selected="${sub==='tasks'}" data-sub="tasks">Задания и тесты</button></div>
+  <section id="adminBody"></section>`;
+  $$('[data-sub]').forEach(b=>b.onclick=()=>go('admin/'+b.dataset.sub));
+  $('#logout').onclick=()=>{adminOk=false;try{sessionStorage.removeItem('kitap-admin')}catch(_){}renderAdmin(sub)};
+  armButton($('#resetDemo'),'Точно вернуть?',()=>{db=SEED();save();prefs.results={};prefs.pages={};savePrefs();toast('Демо-данные восстановлены');renderAdmin(sub)});
+  sub==='tasks'?adminTasks():adminBooks();
+}
+function armButton(btn,armedText,fn){
+  const orig=btn.textContent;let t;
+  btn.addEventListener('click',()=>{if(btn.classList.contains('armed')){clearTimeout(t);fn()}else{btn.classList.add('armed','danger');btn.textContent=armedText;t=setTimeout(()=>{btn.classList.remove('armed');btn.textContent=orig},3000)}});
+}
+
+function adminBooks(editId){
+  const e=editId?book(editId):null;
+  $('#adminBody').innerHTML=`<div class="stack">
+  <div class="table-wrap"><table><thead><tr><th>Книга</th><th>Формат</th><th>Язык</th><th>Страниц</th><th>Заданий</th><th></th></tr></thead><tbody>
+  ${db.books.map(b=>`<tr><td><div class="tcell">${coverHTML(b)}<div><b>${esc(b.title)}</b><span>${esc(b.author)}</span></div></div></td><td>${esc(b.format)}</td><td>${esc(LANG_NAME[b.lang]||b.lang)}</td><td class="num">${pagesOf(b).length}</td><td class="num">${b.tasks.length+b.tests.length}</td>
+    <td><div class="actions"><a class="btn sm ghost" href="#/book/${b.id}">Открыть</a><button class="btn sm" data-edit="${b.id}">Изменить</button><button class="btn sm danger" data-del="${b.id}">Удалить</button></div></td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:28px">Библиотека пуста. Добавьте первую книгу формой ниже.</td></tr>'}
+  </tbody></table></div>
+  <form class="panel" id="bookForm" novalidate>
+    <div class="panel-title">${ic('upload','b')}<div><h2>${e?'Редактирование: '+esc(e.title):'Добавить книгу'}</h2>
+    <p>${e?'Новый файл заменит текст книги. Если файл не выбран, текст останется прежним.':'Поддерживаются PDF, EPUB, DOCX и TXT. Текст извлекается прямо в браузере.'}</p></div></div>
+    <div class="form-grid">
+      <div class="field"><label for="f-title">Название</label><input class="input" id="f-title" required value="${esc(e?e.title:'')}" placeholder="Например, The Picture of Dorian Gray"></div>
+      <div class="field"><label for="f-author">Автор</label><input class="input" id="f-author" required value="${esc(e?e.author:'')}" placeholder="Например, Oscar Wilde"></div>
+      <div class="field full"><label for="f-desc">Описание</label><textarea class="input" id="f-desc" rows="3" placeholder="О чём книга, для кого она">${esc(e?e.desc:'')}</textarea></div>
+      <div class="field"><label for="f-lang">Язык оригинала</label><select class="input" id="f-lang"><option value="auto">Определить автоматически</option>${LANGS.map(l=>`<option value="${l.code}" ${e&&e.lang===l.code?'selected':''}>${LANG_NAME[l.code]}</option>`).join('')}</select></div>
+      <div class="field"><label for="f-year">Год издания</label><input class="input" id="f-year" inputmode="numeric" value="${esc(e&&e.year?e.year:'')}" placeholder="Необязательно"></div>
+      <div class="field"><label>Файл книги</label>${dropHTML('f-file','.pdf,.epub,.docx,.txt','Выберите файл книги','PDF, EPUB, DOCX или TXT')}</div>
+      <div class="field"><label>Обложка</label>${dropHTML('f-cover','image/*','Выберите изображение','JPG или PNG. Без обложки будет сгенерирована')}</div>
+    </div>
+    <div class="form-actions"><span class="status" id="fst"></span>${e?'<button type="button" class="btn ghost" id="cancelEdit">Отмена</button>':''}<button class="btn primary" id="fsave">${e?'Сохранить изменения':'Добавить книгу'}</button></div>
+  </form></div>`;
+  $$('[data-edit]').forEach(b=>b.onclick=()=>{adminBooks(b.dataset.edit);$('#bookForm').scrollIntoView({behavior:'smooth'})});
+  $$('[data-del]').forEach(b=>armButton(b,'Точно?',()=>{const bk=book(b.dataset.del);db.books=db.books.filter(x=>x.id!==b.dataset.del);save();toast(`Книга «${bk.title}» удалена`);renderAdmin('books')}));
+  if(e)$('#cancelEdit').onclick=()=>adminBooks();
+  wireDrop('f-file');wireDrop('f-cover');
+  $('#bookForm').onsubmit=async ev=>{
+    ev.preventDefault();const st=$('#fst');st.classList.remove('err');
+    const title=$('#f-title').value.trim(),author=$('#f-author').value.trim();
+    const file=$('#f-file').files[0],cov=$('#f-cover').files[0];
+    if(!title||!author){st.textContent='Укажите название и автора.';st.classList.add('err');return}
+    if(!e&&!file){st.textContent='Выберите файл книги.';st.classList.add('err');return}
+    $('#fsave').disabled=true;
+    try{
+      let paras=e?e.paras:null,format=e?e.format:null;
+      if(file){st.textContent='Извлекаю текст из файла…';const r=await parseBook(file,m=>st.textContent=m);paras=r.paras;format=r.format;
+        if(!paras.length)throw new Error('В файле не найден текст. Если это скан, нужен PDF с текстовым слоем.')}
+      let cover=e?e.cover:{type:'gen',hue:Math.floor(Math.random()*360)};
+      if(cov){st.textContent='Обрабатываю обложку…';cover={type:'img',src:await shrinkImage(cov)}}
+      let lang=$('#f-lang').value;if(lang==='auto')lang=detectLang(paras.slice(0,20).join(' '));
+      const data={title,author,desc:$('#f-desc').value.trim(),year:$('#f-year').value.trim(),lang,format,cover,paras};
+      if(e)Object.assign(e,data);else db.books.unshift({id:uid('b'),tasks:[],tests:[],...data});
+      save();toast(e?'Изменения сохранены':`Книга «${title}» добавлена`);renderAdmin('books');
+    }catch(err){st.textContent=err.message||'Не удалось прочитать файл.';st.classList.add('err');$('#fsave').disabled=false}
+  };
+}
+function dropHTML(id,accept,title,hint){return `<label class="drop" for="${id}"><input type="file" id="${id}" accept="${accept}"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></span><span style="min-width:0"><b data-t>${title}</b><span data-h>${hint}</span></span></label>`}
+function wireDrop(id){
+  const inp=$('#'+id),lab=inp.closest('.drop');
+  const show=()=>{const f=inp.files[0];if(f){$('[data-t]',lab).textContent=f.name;$('[data-h]',lab).textContent=(f.size/1024/1024).toFixed(2)+' МБ · нажмите, чтобы заменить'}};
+  inp.onchange=show;
+  lab.addEventListener('dragover',e=>{e.preventDefault();lab.classList.add('over')});
+  lab.addEventListener('dragleave',()=>lab.classList.remove('over'));
+  lab.addEventListener('drop',e=>{e.preventDefault();lab.classList.remove('over');if(e.dataTransfer.files.length){inp.files=e.dataTransfer.files;show()}});
+}
+function detectLang(s){const cyr=(s.match(/[а-яё]/gi)||[]).length,lat=(s.match(/[a-z]/gi)||[]).length;if(cyr>lat)return /[әғқңөұүһі]/i.test(s)?'kk':'ru';return 'en'}
+function shrinkImage(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const w=360,h=Math.round(im.height*w/im.width);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);res(c.toDataURL('image/jpeg',.82))};im.onerror=()=>rej(new Error('Не удалось открыть изображение обложки.'));im.src=fr.result};fr.onerror=rej;fr.readAsDataURL(file)})}
+
+/* file parsing */
+const CDN={pdf:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js',pdfw:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js',mammoth:'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'};
+const loaded={};function loadScript(src){return loaded[src]||(loaded[src]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>{delete loaded[src];rej(new Error('Не удалось загрузить модуль чтения файла. Проверьте подключение к интернету.'))};document.head.appendChild(s)}))}
+const toParas=t=>t.replace(/\r/g,'').split(/\n\s*\n|\n/).map(s=>s.replace(/\s+/g,' ').trim()).filter(s=>s.length>1);
+async function parseBook(file,progress){
+  const ext=(file.name.split('.').pop()||'').toLowerCase();
+  if(ext==='txt')return{format:'TXT',paras:toParas(await file.text())};
+  if(ext==='docx'){await loadScript(CDN.mammoth);const r=await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});return{format:'DOCX',paras:toParas(r.value)}}
+  if(ext==='pdf'){
+    await loadScript(CDN.pdf);await loadScript(CDN.pdfw);
+    pdfjsLib.GlobalWorkerOptions.workerSrc=CDN.pdfw;
+    const doc=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+    const out=[];const max=Math.min(doc.numPages,400);
+    for(let i=1;i<=max;i++){progress&&progress(`Читаю страницу ${i} из ${max}…`);const pg=await doc.getPage(i);const c=await pg.getTextContent();
+      let lines=[],cur='',lastY=null;
+      c.items.forEach(it=>{const y=it.transform[5];if(lastY!==null&&Math.abs(y-lastY)>2){lines.push(cur);cur=''}cur+=it.str;lastY=y;if(it.hasEOL){lines.push(cur);cur='';lastY=null}});lines.push(cur);
+      let para='';lines.map(l=>l.trim()).forEach(l=>{if(!l){if(para){out.push(para);para=''}return}if(para.endsWith('-'))para=para.slice(0,-1)+l;else para+=(para?' ':'')+l;if(/[.!?…:»”"]$/.test(l)&&l.length<60){out.push(para);para=''}});if(para)out.push(para)}
+    return{format:'PDF',paras:out.map(s=>s.replace(/\s+/g,' ').trim()).filter(s=>s.length>1)};
+  }
+  if(ext==='epub'){
+    await loadScript(CDN.zip);const zip=await JSZip.loadAsync(await file.arrayBuffer());
+    const cont=await zip.file('META-INF/container.xml')?.async('text');if(!cont)throw new Error('Файл EPUB повреждён: нет container.xml.');
+    const opfPath=new DOMParser().parseFromString(cont,'application/xml').querySelector('rootfile').getAttribute('full-path');
+    const base=opfPath.includes('/')?opfPath.slice(0,opfPath.lastIndexOf('/')+1):'';
+    const opf=new DOMParser().parseFromString(await zip.file(opfPath).async('text'),'application/xml');
+    const man={};$$('manifest > item',opf).forEach(it=>man[it.getAttribute('id')]=it.getAttribute('href'));
+    const out=[];const refs=$$('spine > itemref',opf);
+    for(let i=0;i<refs.length;i++){const href=man[refs[i].getAttribute('idref')];if(!href)continue;progress&&progress(`Читаю главу ${i+1} из ${refs.length}…`);
+      const f=zip.file(decodeURIComponent(base+href.split('#')[0]));if(!f)continue;
+      const html=new DOMParser().parseFromString(await f.async('text'),'text/html');
+      $$('p,h1,h2,h3,h4,li,blockquote',html.body).forEach(n=>{if(n.querySelector('p'))return;const t=n.textContent.replace(/\s+/g,' ').trim();if(t)out.push(t)})}
+    return{format:'EPUB',paras:out};
+  }
+  throw new Error('Этот формат не поддерживается. Загрузите PDF, EPUB, DOCX или TXT.');
+}
+
+/* admin: tasks & tests */
+let adminBookId=null,builder=null;
+function adminTasks(){
+  if(!db.books.length){$('#adminBody').innerHTML='<div class="empty">Сначала добавьте книгу во вкладке «Книги».</div>';return}
+  if(!book(adminBookId))adminBookId=db.books[0].id;
+  const b=book(adminBookId);
+  $('#adminBody').innerHTML=`<div class="stack">
+    <div class="field" style="max-width:420px"><label for="selBook">Книга</label><select class="input" id="selBook">${db.books.map(x=>`<option value="${x.id}" ${x.id===b.id?'selected':''}>${esc(x.title)} — ${esc(x.author)}</option>`).join('')}</select></div>
+    <section class="panel"><div class="panel-title">${ic('list','o')}<div><h2>Текстовые задания</h2><p>Инструкции, которые читатель увидит во вкладке «Задания».</p></div></div>
+      <div class="admin-items" id="taskItems"></div>
+      <form id="taskForm" class="stack" style="gap:10px"><div class="field"><label for="newTask">Новое задание</label><textarea class="input" id="newTask" rows="3" placeholder="Например: выпишите из первой главы 5 слов, связанных с погодой, и переведите их"></textarea></div>
+      <div class="form-actions" style="margin-top:0"><span class="status" id="tst"></span><button class="btn primary">Добавить задание</button></div></form></section>
+    <section class="panel"><div class="panel-title">${ic('check','v')}<div><h2>Тесты</h2><p>Вопрос, варианты ответа и один правильный вариант.</p></div></div>
+      <div class="admin-items" id="testItems"></div>
+      <div id="builder"></div></section>
+  </div>`;
+  $('#selBook').onchange=e=>{adminBookId=e.target.value;builder=null;adminTasks()};
+  drawTaskItems(b);drawTestItems(b);drawBuilder(b);
+  $('#taskForm').onsubmit=e=>{e.preventDefault();const v=$('#newTask').value.trim();if(!v){$('#tst').textContent='Введите текст задания.';$('#tst').classList.add('err');return}b.tasks.push({id:uid('t'),text:v});save();$('#newTask').value='';$('#tst').textContent='';drawTaskItems(b);toast('Задание добавлено')};
+}
+function drawTaskItems(b){
+  const box=$('#taskItems');
+  box.innerHTML=b.tasks.length?b.tasks.map((t,i)=>`<div class="admin-item" data-id="${t.id}"><div class="txt" style="flex:1"><span>Задание ${i+1}</span><p>${esc(t.text)}</p></div><div class="actions"><button class="btn sm" data-ed>Изменить</button><button class="btn sm danger" data-rm>Удалить</button></div></div>`).join(''):'<div class="empty" style="padding:20px">Заданий пока нет.</div>';
+  $$('.admin-item',box).forEach(row=>{const t=b.tasks.find(x=>x.id===row.dataset.id);
+    $('[data-ed]',row).onclick=()=>{row.innerHTML=`<div style="flex:1;display:grid;gap:8px"><textarea class="input" id="ed-${t.id}" rows="3">${esc(t.text)}</textarea><div class="actions"><button class="btn sm ghost" data-c>Отмена</button><button class="btn sm primary" data-s>Сохранить</button></div></div>`;
+      $('[data-c]',row).onclick=()=>drawTaskItems(b);$('[data-s]',row).onclick=()=>{const v=$('textarea',row).value.trim();if(v){t.text=v;save();toast('Задание обновлено')}drawTaskItems(b)}};
+    armButton($('[data-rm]',row),'Точно?',()=>{b.tasks=b.tasks.filter(x=>x.id!==t.id);save();drawTaskItems(b);toast('Задание удалено')})});
+}
+function drawTestItems(b){
+  const box=$('#testItems');
+  box.innerHTML=b.tests.length?b.tests.map(t=>`<div class="admin-item" data-id="${t.id}"><div class="txt"><b>${esc(t.title)}</b><span>${t.questions.length} ${plural(t.questions.length,'вопрос','вопроса','вопросов')}</span></div><div class="actions"><button class="btn sm" data-ed>Изменить</button><button class="btn sm danger" data-rm>Удалить</button></div></div>`).join(''):'<div class="empty" style="padding:20px">Тестов пока нет.</div>';
+  $$('.admin-item',box).forEach(row=>{const t=b.tests.find(x=>x.id===row.dataset.id);
+    $('[data-ed]',row).onclick=()=>{builder=JSON.parse(JSON.stringify(t));drawBuilder(b);$('#builder').scrollIntoView({behavior:'smooth',block:'start'})};
+    armButton($('[data-rm]',row),'Точно?',()=>{b.tests=b.tests.filter(x=>x.id!==t.id);if(builder&&builder.id===t.id)builder=null;save();drawTestItems(b);drawBuilder(b);toast('Тест удалён')})});
+}
+function newBuilder(){return{id:null,title:'',questions:[{q:'',options:['',''],correct:0}]}}
+function drawBuilder(b){
+  if(!builder)builder=newBuilder();const B=builder;
+  $('#builder').innerHTML=`<div class="stack" style="gap:14px">
+    <div class="eyebrow">${B.id?'Редактирование теста':'Новый тест'}</div>
+    <div class="field"><label for="bt-title">Название теста</label><input class="input" id="bt-title" value="${esc(B.title)}" placeholder="Например, Проверка понимания: глава 2"></div>
+    ${B.questions.map((q,i)=>`<div class="qb" data-i="${i}"><div class="qb-head"><b>Вопрос ${i+1}</b>${B.questions.length>1?`<button type="button" class="btn sm ghost" data-rq>Удалить вопрос</button>`:''}</div>
+      <input class="input" data-q id="bq-${i}" value="${esc(q.q)}" placeholder="Текст вопроса">
+      <div class="hint" style="color:var(--muted);font-size:12.5px">Отметьте кружком правильный вариант</div>
+      ${q.options.map((o,j)=>`<div class="qb-opt"><input type="radio" name="bc-${i}" id="bc-${i}-${j}" ${q.correct===j?'checked':''} data-c="${j}" aria-label="Правильный ответ: вариант ${j+1}"><input class="input" data-o="${j}" id="bo-${i}-${j}" value="${esc(o)}" placeholder="Вариант ${j+1}">${q.options.length>2?`<button type="button" class="btn sm ghost" data-ro="${j}" aria-label="Удалить вариант">×</button>`:''}</div>`).join('')}
+      ${q.options.length<6?`<button type="button" class="btn sm ghost" data-ao style="justify-self:start">+ Вариант ответа</button>`:''}</div>`).join('')}
+    <button type="button" class="btn" id="addQ" style="justify-self:start">+ Добавить вопрос</button>
+    <div class="form-actions" style="margin-top:0"><span class="status" id="bst"></span>${B.id?'<button type="button" class="btn ghost" id="bcancel">Отмена</button>':''}<button type="button" class="btn primary" id="bsave">${B.id?'Сохранить тест':'Создать тест'}</button></div></div>`;
+  const sync=()=>{B.title=$('#bt-title').value;$$('.qb').forEach(el=>{const q=B.questions[+el.dataset.i];q.q=$('[data-q]',el).value;$$('[data-o]',el).forEach(o=>q.options[+o.dataset.o]=o.value);const c=$('[data-c]:checked',el);if(c)q.correct=+c.dataset.c})};
+  $$('.qb').forEach(el=>{const i=+el.dataset.i,q=B.questions[i];
+    el.querySelector('[data-rq]')?.addEventListener('click',()=>{sync();B.questions.splice(i,1);drawBuilder(b)});
+    el.querySelector('[data-ao]')?.addEventListener('click',()=>{sync();q.options.push('');drawBuilder(b);$(`#bo-${i}-${q.options.length-1}`).focus()});
+    $$('[data-ro]',el).forEach(x=>x.onclick=()=>{sync();const j=+x.dataset.ro;q.options.splice(j,1);if(q.correct>=q.options.length||q.correct===j)q.correct=0;else if(q.correct>j)q.correct--;drawBuilder(b)})});
+  $('#addQ').onclick=()=>{sync();B.questions.push({q:'',options:['',''],correct:0});drawBuilder(b);$(`#bq-${B.questions.length-1}`).focus()};
+  $('#bcancel')?.addEventListener('click',()=>{builder=null;drawBuilder(b)});
+  $('#bsave').onclick=()=>{sync();const st=$('#bst');st.classList.add('err');
+    if(!B.title.trim()){st.textContent='Введите название теста.';return}
+    for(let i=0;i<B.questions.length;i++){const q=B.questions[i];if(!q.q.trim()){st.textContent=`Вопрос ${i+1}: введите текст вопроса.`;return}
+      if(q.options.some(o=>!o.trim())){st.textContent=`Вопрос ${i+1}: заполните все варианты или удалите пустые.`;return}}
+    const clean={id:B.id||uid('x'),title:B.title.trim(),questions:B.questions.map(q=>({q:q.q.trim(),options:q.options.map(o=>o.trim()),correct:q.correct}))};
+    const idx=b.tests.findIndex(x=>x.id===clean.id);if(idx>=0)b.tests[idx]=clean;else b.tests.push(clean);
+    if(prefs.results[clean.id]){delete prefs.results[clean.id];savePrefs()}
+    save();toast(idx>=0?'Тест сохранён':'Тест создан');builder=null;drawTestItems(b);drawBuilder(b)};
+}
+
+renderLangSeg();route();
+</script>
+
+</body></html>
