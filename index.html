@@ -354,6 +354,31 @@ th{background:var(--surface)}
 .demo-cred{background:var(--y-bg);border-radius:12px}
 .toast{border-radius:999px;background:var(--btn-dark);color:var(--on-dark)}
 .foot{border-top:0}
+
+/* phones: two books per row, compact feature list */
+@media (max-width:560px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .card{padding:8px 8px 12px;gap:10px;border-radius:16px;min-width:0}
+  .card>div,.card>p,.card .chips{padding-inline:4px}
+  .card h3{font-size:15px;line-height:1.25}
+  .card .by{font-size:12.5px}
+  .card .desc{display:none}
+  .card .chips .chip:not(.accent){display:none}
+  .card .chip{font-size:11px;padding:2px 7px}
+  .cover{border-radius:10px}
+  .cover.gen{padding:12px}
+  .cv-ic{width:34px;height:34px}.cv-ic svg{width:17px;height:17px}
+  .cover.gen .ct{font-size:15px;margin-bottom:6px}
+  .cover.gen .ca{font-size:9.5px}
+  .cover.gen::after{width:100px;height:100px;right:-24px;bottom:-24px}
+  .feats{grid-template-columns:1fr;gap:8px;margin-bottom:24px}
+  .feat{grid-template-columns:auto 1fr;align-items:center;padding:12px 14px;gap:12px;border-radius:16px}
+  .feat .ic{width:40px;height:40px}.feat .ic svg{width:19px;height:19px}
+  .feat h3{font-size:15px}
+  .feat p{font-size:13px;margin-top:2px}
+  .lib-head{margin-bottom:18px;gap:14px}
+  .lib-head p{font-size:14px}
+}
 </style>
 
 <header class="bar">
