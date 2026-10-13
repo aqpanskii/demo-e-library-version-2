@@ -369,6 +369,7 @@ th{background:var(--surface)}
 <main class="wrap" id="app"></main>
 <div class="wrap foot">Демо-версия учебного проекта. Изменения в админ-панели сохраняются в этом браузере.</div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
 <script>
 /* ---------- data ---------- */
 const LANGS=[{code:'ru',label:'RU',name:'русский'},{code:'kk',label:'KZ',name:'казахский'},{code:'en',label:'EN',name:'английский'}];
@@ -453,7 +454,15 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const uid=p=>p+Math.random().toString(36).slice(2,9);
 const book=id=>db.books.find(b=>b.id===id);
 function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:(m>=2&&m<=4&&(h<10||h>=20)?b:c)}
-let toastT;function toast(msg){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
+/* ---------- motion (anime.js) ---------- */
+const RM=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}})();
+const canAnim=()=>!RM&&typeof anime==='function';
+function clearFx(a){a.animatables.forEach(x=>{x.target.style.transform='';x.target.style.opacity=''})}
+function enter(t,o={}){if(!canAnim()||!t||(t.length===0))return;anime({targets:t,opacity:[0,1],translateY:[o.y??16,0],translateX:[o.x??0,0],duration:o.dur||560,easing:'easeOutCubic',delay:anime.stagger(o.stagger??55,{start:o.start||0}),complete:clearFx})}
+function leave(el,cb){if(!canAnim()||!el){cb();return}anime({targets:el,opacity:0,translateX:28,duration:240,easing:'easeInQuad',complete:cb})}
+function shake(el){if(!canAnim()||!el)return;anime({targets:el,translateX:[0,-9,8,-6,4,0],duration:420,easing:'easeInOutSine',complete:clearFx})}
+let toastT;function toast(msg){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;t.hidden=false;
+  if(canAnim()){anime.remove(t);anime({targets:t,translateX:['-50%','-50%'],translateY:[24,0],opacity:[0,1],duration:420,easing:'spring(1, 90, 12, 0)',complete:clearFx})}clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
 const ICONS={
  book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 22H20v-4"/>',
  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3.4 3.2 14.6 0 18M12 3c-3.2 3.4-3.2 14.6 0 18"/>',
@@ -530,9 +539,12 @@ function renderLibrary(){
   <div class="sec-title">${ic('shelf','v',1)}<h2>Книги</h2></div>
   <section class="grid" id="grid"></section>`;
   $('#q').addEventListener('input',e=>{query=e.target.value;drawGrid()});
-  drawGrid();
+  enter($$('.lib-head > div, .lib-head > .search'),{stagger:80});
+  enter($$('.feat'),{start:140,stagger:90,y:22});
+  enter($$('main > .sec-title'),{start:300});
+  drawGrid(360);
 }
-function drawGrid(){
+function drawGrid(start=0){
   const q=query.trim().toLowerCase();
   const list=db.books.filter(b=>!q||(b.title+' '+b.author).toLowerCase().includes(q));
   $('#grid').innerHTML=list.length?list.map(b=>{const n=b.tasks.length+b.tests.length;return `
@@ -541,6 +553,7 @@ function drawGrid(){
       <p class="desc">${esc(b.desc)}</p>
       <div class="chips"><span class="chip">${esc(LANG_NAME[b.lang]||b.lang)}</span><span class="chip">${esc(b.format)}</span>${n?`<span class="chip accent">${n} ${plural(n,'задание','задания','заданий')}</span>`:''}</div></a>`}).join('')
     :`<div class="empty" style="grid-column:1/-1">По запросу «${esc(query)}» ничего не найдено. Проверьте написание или поищите по автору.</div>`;
+  enter($$('#grid > *'),{start,stagger:start?70:35,y:start?24:10,dur:start?620:360});
 }
 
 /* ---------- book page ---------- */
@@ -561,8 +574,11 @@ function renderBook(b,tab){
   <section id="tabBody"></section>`;
   $('#tab-read').onclick=()=>go('book/'+b.id);
   $('#tab-tasks').onclick=()=>go('book/'+b.id+'/tasks');
+  if(lastBookId!==b.id){enter($$('.back, .book-head, .tabs'),{stagger:70});lastBookId=b.id}
+  else enter($('.tabs'),{y:0,dur:1});
   tab==='read'?renderReader(b):renderTasks(b);
 }
+let lastBookId=null;
 
 function renderReader(b){
   const pages=pagesOf(b);
@@ -582,20 +598,22 @@ function renderReader(b){
     </div>
   </div>`;
   const rt=$('#rt');rt.style.setProperty('--rs',prefs.size+'px');
-  function draw(){
+  function draw(dir){
     hidePop();
     rt.classList.toggle('cont',p>0&&!pageStartsPara(b,pages,p));
     rt.innerHTML=pages[p].map(t=>`<p>${esc(t)}</p>`).join('');
+    if(dir!==undefined)enter($$('p',rt),{x:dir*30,y:0,stagger:45,dur:440});
     $('#pnum').value=p+1;$('#prev').disabled=p===0;$('#next').disabled=p===pages.length-1;
     $('#prog').style.width=((p+1)/pages.length*100)+'%';
     prefs.pages[b.id]=p;savePrefs();
   }
-  $('#prev').onclick=()=>{if(p>0){p--;draw();$('.tabs').scrollIntoView({block:'start',behavior:'smooth'})}};
-  $('#next').onclick=()=>{if(p<pages.length-1){p++;draw();$('.tabs').scrollIntoView({block:'start',behavior:'smooth'})}};
-  $('#pnum').onchange=e=>{const v=Math.max(1,Math.min(pages.length,parseInt(e.target.value)||1));p=v-1;draw()};
+  $('#prev').onclick=()=>{if(p>0){p--;draw(-1);$('.tabs').scrollIntoView({block:'start',behavior:'smooth'})}};
+  $('#next').onclick=()=>{if(p<pages.length-1){p++;draw(1);$('.tabs').scrollIntoView({block:'start',behavior:'smooth'})}};
+  $('#pnum').onchange=e=>{const v=Math.max(1,Math.min(pages.length,parseInt(e.target.value)||1));const d=Math.sign(v-1-p);p=v-1;draw(d)};
   $("#fsDec").onclick=()=>{prefs.size=Math.max(14,prefs.size-1);rt.style.setProperty('--rs',prefs.size+'px');savePrefs()};
   $("#fsInc").onclick=()=>{prefs.size=Math.min(26,prefs.size+1);rt.style.setProperty('--rs',prefs.size+'px');savePrefs()};
   currentBook=b;draw();
+  enter($$('.reader > *'),{start:120,stagger:60});
 }
 function pageStartsPara(b,pages,p){const first=pages[p][0];return b.paras.some(x=>x.startsWith(first.slice(0,40)))}
 
@@ -628,6 +646,7 @@ function showPop(text,rect){
   popEl.style.left=left+'px';popEl.style.top=top+'px';
   const ph=popEl.offsetHeight;
   if(rect.bottom+ph+20>window.innerHeight&&rect.top-ph-10>0)popEl.style.top=(rect.top-ph-10+window.scrollY)+'px';
+  if(canAnim()){popEl.style.animation='none';popEl.style.transformOrigin='50% 0';anime({targets:popEl,scale:[.9,1],translateY:[6,0],opacity:[0,1],duration:600,easing:'spring(1, 140, 13, 0)',complete:clearFx})}
   $('.pop-x',popEl).onclick=hidePop;
   $('.seg',popEl).addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(!b)return;prefs.lang=b.dataset.l;savePrefs();renderLangSeg();runTranslate()});
   runTranslate();
@@ -650,6 +669,7 @@ async function runTranslate(){
   if(out.text)res.textContent=out.text;
   else{res.className='pop-res small';res.textContent=out.gloss.length?'Перевод по словам:':'Этого слова нет в демо-словаре. В рабочей версии перевод придёт из онлайн-API.'}
   gl.innerHTML=out.gloss.map(g=>`<div><b>${esc(g[0])}</b><span>— ${esc(g[1])}</span></div>`).join('');
+  if(canAnim())anime({targets:[res,gl],opacity:[0,1],translateY:[6,0],duration:320,easing:'easeOutQuad',delay:anime.stagger(60),complete:clearFx});
   meta.textContent={api:'Онлайн-перевод',dict:'Словарь библиотеки',none:'Нет перевода'}[out.src]+' · '+LANG_NAME[from].slice(0,3)+' → '+LANG_NAME[to].slice(0,3);
 }
 function norm(s){return s.toLowerCase().replace(/ё/g,'е').replace(/[’]/g,"'").replace(/[^\p{L}\p{N}\s'-]/gu,' ').replace(/\s+/g,' ').trim()}
@@ -692,6 +712,7 @@ function renderTasks(b){
       <div class="stack" id="tests">${b.tests.length?'':'<div class="empty">Тестов к этой книге пока нет.</div>'}</div></section>
   </div>`;
   b.tests.forEach(t=>$('#tests').appendChild(testEl(t)));
+  enter($$('.tasks-layout .sec-title, .task-list li, .tasks-layout .empty, .test'),{stagger:60});
 }
 function testEl(t){
   const el=document.createElement('form');el.className='test';el.noValidate=true;
@@ -715,6 +736,11 @@ function testEl(t){
     const verdict=pct>=85?'Отлично':pct>=60?'Хорошо':pct>=40?'Есть над чем поработать':'Перечитайте текст и попробуйте ещё раз';
     $('.test-foot',el).innerHTML=`<div class="score"><div class="ring" style="--p:${pct}"><b>${pct}%</b></div><div><strong>${s} из ${n} правильных</strong><small>${verdict}</small></div></div><button type="button" class="btn" data-reset>Пройти заново</button>`;
     $('[data-reset]',el).onclick=()=>el.replaceWith(testEl(t));
+    if(canAnim()){const ring=$('.ring',el),lbl=$('.ring b',el),o={p:0};ring.style.setProperty('--p',0);lbl.textContent='0%';
+      anime({targets:o,p:pct,round:1,duration:1200,delay:200,easing:'easeOutExpo',update:()=>{ring.style.setProperty('--p',o.p);lbl.textContent=o.p+'%'}});
+      enter($$('.opt.right, .opt.wrong',el),{y:0,x:-10,stagger:80});
+      enter($('.score',el),{y:10});
+      if(pct>=85)anime({targets:ring,scale:[1,1.12,1],duration:700,delay:1100,easing:'easeInOutQuad',complete:clearFx});}
     $('.test-head .meta',el).textContent=`${n} ${plural(n,'вопрос','вопроса','вопросов')} · результат ${s} из ${n}`;
   });
   $('[data-reset]',el).onclick=()=>el.replaceWith(testEl(t));
@@ -732,7 +758,8 @@ function renderAdmin(sub){
         <div class="field"><label for="lp">Пароль</label><input class="input" id="lp" type="password" autocomplete="current-password"></div>
         <span class="status" id="lst"></span>
         <button class="btn primary">Войти</button></form></div>`;
-    $('#login').onsubmit=e=>{e.preventDefault();if($('#lu').value.trim()==='admin'&&$('#lp').value==='admin'){adminOk=true;try{sessionStorage.setItem('kitap-admin','1')}catch(_){}renderAdmin(sub)}else{$('#lst').textContent='Неверный логин или пароль. Для демо используйте admin / admin.';$('#lst').classList.add('err')}};
+    $('#login').onsubmit=e=>{e.preventDefault();if($('#lu').value.trim()==='admin'&&$('#lp').value==='admin'){adminOk=true;try{sessionStorage.setItem('kitap-admin','1')}catch(_){}renderAdmin(sub)}else{$('#lst').textContent='Неверный логин или пароль. Для демо используйте admin / admin.';$('#lst').classList.add('err');shake($('.login'))}};
+    enter($('.login'),{y:20});
     return;
   }
   $('#app').innerHTML=`
@@ -744,6 +771,7 @@ function renderAdmin(sub){
   $('#logout').onclick=()=>{adminOk=false;try{sessionStorage.removeItem('kitap-admin')}catch(_){}renderAdmin(sub)};
   armButton($('#resetDemo'),'Точно вернуть?',()=>{db=SEED();save();prefs.results={};prefs.pages={};savePrefs();toast('Демо-данные восстановлены');renderAdmin(sub)});
   sub==='tasks'?adminTasks():adminBooks();
+  enter($$('.admin-head, main > .tabs, #adminBody > .stack > *'),{stagger:70});
 }
 function armButton(btn,armedText,fn){
   const orig=btn.textContent;let t;
@@ -772,7 +800,7 @@ function adminBooks(editId){
     <div class="form-actions"><span class="status" id="fst"></span>${e?'<button type="button" class="btn ghost" id="cancelEdit">Отмена</button>':''}<button class="btn primary" id="fsave">${e?'Сохранить изменения':'Добавить книгу'}</button></div>
   </form></div>`;
   $$('[data-edit]').forEach(b=>b.onclick=()=>{adminBooks(b.dataset.edit);$('#bookForm').scrollIntoView({behavior:'smooth'})});
-  $$('[data-del]').forEach(b=>armButton(b,'Точно?',()=>{const bk=book(b.dataset.del);db.books=db.books.filter(x=>x.id!==b.dataset.del);save();toast(`Книга «${bk.title}» удалена`);renderAdmin('books')}));
+  $$('[data-del]').forEach(b=>armButton(b,'Точно?',()=>leave(b.closest('tr'),()=>{const bk=book(b.dataset.del);db.books=db.books.filter(x=>x.id!==b.dataset.del);save();toast(`Книга «${bk.title}» удалена`);renderAdmin('books')})));
   if(e)$('#cancelEdit').onclick=()=>adminBooks();
   wireDrop('f-file');wireDrop('f-cover');
   $('#bookForm').onsubmit=async ev=>{
@@ -861,7 +889,7 @@ function adminTasks(){
   </div>`;
   $('#selBook').onchange=e=>{adminBookId=e.target.value;builder=null;adminTasks()};
   drawTaskItems(b);drawTestItems(b);drawBuilder(b);
-  $('#taskForm').onsubmit=e=>{e.preventDefault();const v=$('#newTask').value.trim();if(!v){$('#tst').textContent='Введите текст задания.';$('#tst').classList.add('err');return}b.tasks.push({id:uid('t'),text:v});save();$('#newTask').value='';$('#tst').textContent='';drawTaskItems(b);toast('Задание добавлено')};
+  $('#taskForm').onsubmit=e=>{e.preventDefault();const v=$('#newTask').value.trim();if(!v){$('#tst').textContent='Введите текст задания.';$('#tst').classList.add('err');return}b.tasks.push({id:uid('t'),text:v});save();$('#newTask').value='';$('#tst').textContent='';drawTaskItems(b);enter($('#taskItems .admin-item:last-child'),{y:0,x:-20});toast('Задание добавлено')};
 }
 function drawTaskItems(b){
   const box=$('#taskItems');
@@ -869,14 +897,14 @@ function drawTaskItems(b){
   $$('.admin-item',box).forEach(row=>{const t=b.tasks.find(x=>x.id===row.dataset.id);
     $('[data-ed]',row).onclick=()=>{row.innerHTML=`<div style="flex:1;display:grid;gap:8px"><textarea class="input" id="ed-${t.id}" rows="3">${esc(t.text)}</textarea><div class="actions"><button class="btn sm ghost" data-c>Отмена</button><button class="btn sm primary" data-s>Сохранить</button></div></div>`;
       $('[data-c]',row).onclick=()=>drawTaskItems(b);$('[data-s]',row).onclick=()=>{const v=$('textarea',row).value.trim();if(v){t.text=v;save();toast('Задание обновлено')}drawTaskItems(b)}};
-    armButton($('[data-rm]',row),'Точно?',()=>{b.tasks=b.tasks.filter(x=>x.id!==t.id);save();drawTaskItems(b);toast('Задание удалено')})});
+    armButton($('[data-rm]',row),'Точно?',()=>leave(row,()=>{b.tasks=b.tasks.filter(x=>x.id!==t.id);save();drawTaskItems(b);toast('Задание удалено')}))});
 }
 function drawTestItems(b){
   const box=$('#testItems');
   box.innerHTML=b.tests.length?b.tests.map(t=>`<div class="admin-item" data-id="${t.id}"><div class="txt"><b>${esc(t.title)}</b><span>${t.questions.length} ${plural(t.questions.length,'вопрос','вопроса','вопросов')}</span></div><div class="actions"><button class="btn sm" data-ed>Изменить</button><button class="btn sm danger" data-rm>Удалить</button></div></div>`).join(''):'<div class="empty" style="padding:20px">Тестов пока нет.</div>';
   $$('.admin-item',box).forEach(row=>{const t=b.tests.find(x=>x.id===row.dataset.id);
     $('[data-ed]',row).onclick=()=>{builder=JSON.parse(JSON.stringify(t));drawBuilder(b);$('#builder').scrollIntoView({behavior:'smooth',block:'start'})};
-    armButton($('[data-rm]',row),'Точно?',()=>{b.tests=b.tests.filter(x=>x.id!==t.id);if(builder&&builder.id===t.id)builder=null;save();drawTestItems(b);drawBuilder(b);toast('Тест удалён')})});
+    armButton($('[data-rm]',row),'Точно?',()=>leave(row,()=>{b.tests=b.tests.filter(x=>x.id!==t.id);if(builder&&builder.id===t.id)builder=null;save();drawTestItems(b);drawBuilder(b);toast('Тест удалён')}))});
 }
 function newBuilder(){return{id:null,title:'',questions:[{q:'',options:['',''],correct:0}]}}
 function drawBuilder(b){
@@ -896,7 +924,7 @@ function drawBuilder(b){
     el.querySelector('[data-rq]')?.addEventListener('click',()=>{sync();B.questions.splice(i,1);drawBuilder(b)});
     el.querySelector('[data-ao]')?.addEventListener('click',()=>{sync();q.options.push('');drawBuilder(b);$(`#bo-${i}-${q.options.length-1}`).focus()});
     $$('[data-ro]',el).forEach(x=>x.onclick=()=>{sync();const j=+x.dataset.ro;q.options.splice(j,1);if(q.correct>=q.options.length||q.correct===j)q.correct=0;else if(q.correct>j)q.correct--;drawBuilder(b)})});
-  $('#addQ').onclick=()=>{sync();B.questions.push({q:'',options:['',''],correct:0});drawBuilder(b);$(`#bq-${B.questions.length-1}`).focus()};
+  $('#addQ').onclick=()=>{sync();B.questions.push({q:'',options:['',''],correct:0});drawBuilder(b);enter($('#builder .qb:last-of-type'),{y:14});$(`#bq-${B.questions.length-1}`).focus()};
   $('#bcancel')?.addEventListener('click',()=>{builder=null;drawBuilder(b)});
   $('#bsave').onclick=()=>{sync();const st=$('#bst');st.classList.add('err');
     if(!B.title.trim()){st.textContent='Введите название теста.';return}
@@ -905,7 +933,7 @@ function drawBuilder(b){
     const clean={id:B.id||uid('x'),title:B.title.trim(),questions:B.questions.map(q=>({q:q.q.trim(),options:q.options.map(o=>o.trim()),correct:q.correct}))};
     const idx=b.tests.findIndex(x=>x.id===clean.id);if(idx>=0)b.tests[idx]=clean;else b.tests.push(clean);
     if(prefs.results[clean.id]){delete prefs.results[clean.id];savePrefs()}
-    save();toast(idx>=0?'Тест сохранён':'Тест создан');builder=null;drawTestItems(b);drawBuilder(b)};
+    save();toast(idx>=0?'Тест сохранён':'Тест создан');builder=null;drawTestItems(b);drawBuilder(b);enter($(`#testItems .admin-item[data-id="${clean.id}"]`),{y:0,x:-20})};
 }
 
 renderLangSeg();route();
